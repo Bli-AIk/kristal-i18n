@@ -301,7 +301,7 @@
     "chara_getTitle": "LV[var:lv] [var:title]",
     "spell_castMessage": "* [var:userName]施展了[var:castName]！",
     "item_check": "* \"[var:name]\" - [var:check]",
-    "item_tossWeapon": "* （最近^1，武器好像无法被轻易丢掉了。）",
+    "item_tossWeapon": "* （最近，武器好像无法被轻易丢掉了。）",
     "item_toss1": "* 你轻声地跟[var:name]道了个别。",
     "item_toss2": "* 你把[var:name]放在地上，\n轻轻拍了拍它。",
     "item_toss3": "* 你把[var:name]丢在地上，\n这正是它这样的垃圾\n应有的待遇。",
