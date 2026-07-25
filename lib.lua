@@ -1315,7 +1315,25 @@ local function applyItemLocalizationPatch(item)
     return item
 end
 
-local function applySpellLocalizationPatch(spell)
+local applySpellLocalizationPatch
+
+local function hookRegistryItemCreation()
+    if langLibZh.registry_item_creation_hooked then
+        return
+    end
+
+    langLibZh.registry_item_creation_hooked = true
+
+    HookSystem.hook(Registry, "createItem", function(orig, id, ...)
+        return applyItemLocalizationPatch(orig(id, ...))
+    end)
+
+    HookSystem.hook(Registry, "createSpell", function(orig, id, ...)
+        return applySpellLocalizationPatch(orig(id, ...))
+    end)
+end
+
+applySpellLocalizationPatch = function(spell)
     if not spell or spell.__langlib_zh_localized then
         return spell
     end
@@ -1350,6 +1368,7 @@ end
 
 function langLibZh:init()
     ensureLanguageGlobals()
+    hookRegistryItemCreation()
 end
 
 function langLibZh:registerDebugOptions(debug_system)
@@ -1589,14 +1608,6 @@ function langLibZh:postInit()
             choices = Game:concat(choices, options["var"])
         end
         return orig(self, choices, options)
-    end)
-
-    HookSystem.hook(Registry, "createItem", function(orig, id, ...)
-        return applyItemLocalizationPatch(orig(id, ...))
-    end)
-
-    HookSystem.hook(Registry, "createSpell", function(orig, id, ...)
-        return applySpellLocalizationPatch(orig(id, ...))
     end)
 
     if DarkMenu then
