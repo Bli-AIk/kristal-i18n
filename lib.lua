@@ -10,6 +10,7 @@ local CJK_TYPEWRITER_SPEED_MULTIPLIER = 1 --0.85
 local NAME_STYLE_TRANSLATED = "translated"
 local NAME_STYLE_ORIGINAL = "original"
 local NAME_STYLES = { NAME_STYLE_TRANSLATED, NAME_STYLE_ORIGINAL }
+local DEFAULT_LANGUAGE_TOGGLE_KEY = "f7"
 
 local STATIC_TEXT_IDS = {
     ["~ KRISTAL DEBUG ~"] = "debug_menu_title",
@@ -1238,6 +1239,181 @@ local function getLocalizedTextureAsset(orig, path)
     return orig(path)
 end
 
+local POWER_STAT_LABELS = {
+    ["Guts:"] = "guts_stat",
+    ["Rudeness"] = "rudeness_stat",
+    ["Fluffiness"] = "fluffiness_stat",
+    ["Coldness"] = "coldness_stat",
+    ["Boldness"] = "boldness_stat",
+}
+
+local ITEM_BONUS_NAMES = {
+    ["GrazeTime"] = "graze_time_bonus",
+}
+
+local NOELLE_SPECIAL_TITLE_KEYS = {
+    ["Ice Trancer"] = "chara_noelle_title_ice_trancer",
+    ["Frostmancer"] = "chara_noelle_title_frostmancer",
+}
+
+local function mapNameKey(id)
+    return "map_" .. tostring(id):gsub("[^%w_]", "_") .. "_name"
+end
+
+local function localizeMapName(map)
+    if not map or not map.id or not Game or not Game.loc then
+        return
+    end
+
+    local properties = (map.data and map.data.properties) or {}
+    local name_key = properties.name_id or mapNameKey(map.id)
+    local default_name = properties.name or map.name or map.id
+    map.name = Game:loc(default_name, name_key)
+end
+
+local function refreshMapName()
+    if Game.world then
+        localizeMapName(Game.world.map)
+    end
+end
+
+local function refreshBattleLocalization()
+    if not Game.battle then
+        return
+    end
+
+    for _, enemy in ipairs(Game.battle.enemies or {}) do
+        if type(enemy.applyLocalization) == "function" then
+            enemy:applyLocalization(true)
+        end
+    end
+end
+
+local function hookPowerStatLabels(party_member)
+    if not party_member or party_member.__langlib_zh_power_stats_hooked then
+        return
+    end
+
+    party_member.__langlib_zh_power_stats_hooked = true
+    HookSystem.hook(party_member, "drawPowerStat", function(orig, self, index, x, y, menu)
+        if Game:getLanguage() ~= "zh_hans" then
+            return orig(self, index, x, y, menu)
+        end
+
+        local original_print = love.graphics.print
+        love.graphics.print = function(text, ...)
+            local key = POWER_STAT_LABELS[text]
+            if key then
+                text = Game:loc(text, key)
+            end
+            return original_print(text, ...)
+        end
+
+        local ok, result = xpcall(function()
+            return orig(self, index, x, y, menu)
+        end, debug.traceback)
+        love.graphics.print = original_print
+
+        if not ok then
+            error(result)
+        end
+        return result
+    end)
+end
+
+local function localizeVictoryText(text)
+    if Game:getLanguage() ~= "zh_hans" or type(text) ~= "string" then
+        return text
+    end
+
+    local xp, money, currency = text:match("^%* You won!\n%* Got (.-) EXP and (.-) (.-)%.$")
+    if xp then
+        return Game:loc("* You won!\n* Got [var:xp] EXP and [var:money] [var:currency].", "battle_victory_with_exp", {
+            xp = xp,
+            money = money,
+            currency = currency,
+        })
+    end
+
+    local stronger_money, stronger_currency, stronger = text:match("^%* You won!\n%* Got (.-) (.-)%.\n%* (.-) became stronger%.$")
+    if stronger_money then
+        if stronger == "You" then
+            stronger = "你"
+        end
+        return Game:loc("* You won!\n* Got [var:money] [var:currency].\n* [var:stronger] became stronger.", "battle_victory_stronger", {
+            money = stronger_money,
+            currency = stronger_currency,
+            stronger = stronger,
+        })
+    end
+
+    return text
+end
+
+local function hookFrameworkLocalization()
+    if langLibZh.framework_localization_hooked then
+        return
+    end
+
+    langLibZh.framework_localization_hooked = true
+
+    HookSystem.hook(Item, "getBonusName", function(orig, item, ...)
+        local bonus_name = orig(item, ...)
+        if Game:getLanguage() ~= "zh_hans" then
+            return bonus_name
+        end
+
+        local key = ITEM_BONUS_NAMES[bonus_name]
+        return key and Game:loc(bonus_name, key) or bonus_name
+    end)
+
+    HookSystem.hook(Battle, "battleText", function(orig, battle, text, ...)
+        return orig(battle, localizeVictoryText(text), ...)
+    end)
+
+    local noelle = Registry.getPartyMember("noelle")
+    if noelle then
+        HookSystem.hook(noelle, "getTitle", function(orig, self, ...)
+            local title = orig(self, ...)
+            if Game:getLanguage() ~= "zh_hans" or type(title) ~= "string" then
+                return title
+            end
+
+            for english_title, key in pairs(NOELLE_SPECIAL_TITLE_KEYS) do
+                if title:find(english_title, 1, true) then
+                    return Game:loc("LV[var:lv] [var:title]", "chara_getTitle", {
+                        lv = self:getLevel(),
+                        title = Game:loc(title:gsub("^LV%d+ ", ""), key),
+                    })
+                end
+            end
+            return title
+        end)
+    end
+
+    for _, id in ipairs({"kris", "susie", "ralsei", "noelle"}) do
+        hookPowerStatLabels(Registry.getPartyMember(id))
+    end
+
+    if Interactable then
+        HookSystem.hook(Interactable, "onInteract", function(orig, self, ...)
+            if type(self.text) == "table" and self.text[1] == "* (It's frozen solid...)" then
+                self.text_id = self.text_id or {}
+                self.text_id[1] = "frozen_enemy_text"
+            end
+            return orig(self, ...)
+        end)
+    end
+
+    if World then
+        HookSystem.hook(World, "setupMap", function(orig, self, ...)
+            local result = orig(self, ...)
+            localizeMapName(self.map)
+            return result
+        end)
+    end
+end
+
 local function applyItemLocalizationPatch(item)
     if not item or item.__langlib_zh_localized then
         return item
@@ -1369,6 +1545,36 @@ end
 function langLibZh:init()
     ensureLanguageGlobals()
     hookRegistryItemCreation()
+    hookFrameworkLocalization()
+end
+
+function langLibZh:onKeyPressed(key, is_repeat)
+    local toggle_key = getConfig("languageToggleKey")
+    if toggle_key == false then
+        return
+    end
+    toggle_key = tostring(toggle_key or DEFAULT_LANGUAGE_TOGGLE_KEY):lower()
+
+    if is_repeat or key:lower() ~= toggle_key or not Game.setLanguage then
+        return
+    end
+
+    local next_language = Game:getLanguage() == "zh_hans" and "en" or "zh_hans"
+    if Game:setLanguage(next_language) then
+        refreshMapName()
+        refreshBattleLocalization()
+
+        local message = Game:loc("* Language switched to [var:language].", "lang_language_switched", {
+            language = Game:getLanguageName()
+        })
+        print(message)
+
+        if Game.world and Game.world.player and not Game.world:hasCutscene() and not Game.world.menu then
+            Game.world:showText(message)
+        end
+
+        return true
+    end
 end
 
 function langLibZh:registerDebugOptions(debug_system)
