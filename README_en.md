@@ -25,7 +25,7 @@ Once the library is installed, a mod only needs a language JSON file to achieve 
 
 - 🌐 `zh_hans` language ID and complete Chinese language table
 - 🔤 UTF-8-safe `[var:name]` variable substitution
-- 👤 `[name:xxx]` name references with translated/original name styles
+- 👤 `[name:xxx]` name references with a selectable name language
 - 🔍 `auto` mode for automatic system language detection and best-match selection
 - 🔄 Runtime language switching (the integration mod binds it to F7), persisted to save data
 - 📝 `cutscene:text(..., {id = "text_id"})` and `cutscene:choicer(..., {ids = {...}})` for direct id-based localization
@@ -67,7 +67,7 @@ Default configuration is in `lib.json`:
 ```json
 {
     "defaultLanguage": "en",
-    "defaultNameStyle": "translated",
+    "defaultNameLanguage": "en",
     "languages": ["en", "zh_hans"],
     "languageNames": {
         "en": "English",
@@ -93,7 +93,7 @@ Override in your mod's `mod.json`:
 
 `defaultLanguage` can be a specific language ID or `"auto"`. `"auto"` reads the system language and selects the closest match from the `languages` list; if no match is found, it falls back to the first item or English.
 
-`defaultNameStyle` can be `"translated"` or `"original"` and controls the default name display style. The Engine Options menu has a separate `Debug Mode Terminology` option for toggling translations of terms such as `wave`, `encounter`, `cutscene`, `legend`, `battle`, `object`, and `debug`; it is independent from the character-name setting. `engine` remains translated as `引擎`.
+`defaultNameLanguage` accepts a language ID present in the name table, such as `"en"` or `"zh_hans"`. Name language is independent from text language, so changing the text language does not change the selected name language. The Engine Options menu has a separate `Debug Mode Terminology` option for toggling translations of terms such as `wave`, `encounter`, `cutscene`, `legend`, `battle`, `object`, and `debug`; it is independent from the character-name setting. `engine` remains translated as `引擎`.
 
 ## Usage
 
@@ -133,7 +133,7 @@ Each name has one ID with language IDs for its values:
 }
 ```
 
-Translated mode uses the current language value. Original mode uses the fallback language value, which is `en` by default.
+Name language mode uses the value for the selected language. If a name does not have that language, it falls back to `en`, then to the name ID.
 
 You can reference names inside regular text so one translation follows the current setting:
 
@@ -147,8 +147,8 @@ In code, resolve a name through the normal localization entry point:
 
 ```lua
 Game:loc("[name:kris]")
-Game:setNameStyle("original")
-Game:setNameStyle("translated")
+Game:setNameLanguage("en")
+Game:setNameLanguage("zh_hans")
 ```
 
 ### Text Localization
@@ -201,15 +201,15 @@ Assets.getFont("main")           -- → lang/zh_hans/main.ttf
 Assets.playSound("voice/noelle") -- → lang/zh_hans/voice/noelle.wav
 ```
 
-Texture overrides also support a name-style layer. For `Assets.getTexture("party/kris/name")`, lookup order is:
+Texture overrides also support a name-language layer. For `Assets.getTexture("party/kris/name")`, lookup order is:
 
 ```text
-lang/zh_hans/translated/party/kris/name.png
+lang/zh_hans/zh_hans/party/kris/name.png
 lang/zh_hans/party/kris/name.png
 party/kris/name.png
 ```
 
-When `Game:getNameStyle()` is `"translated"`, the `translated` layer has the highest priority. When switched to `"original"`, the `original` layer is checked first, then the normal language override and the base asset. Put textures that should follow the translated/original character-name setting in the matching layer; keep normal Chinese UI textures in `lang/zh_hans/...`.
+When `Game:getNameLanguage()` is `"zh_hans"`, the `zh_hans` layer has the highest priority. Selecting `"en"` checks the `en` layer instead, then falls back to the normal language override and the base asset. Put textures that should follow the name language in the matching language layer; keep normal Chinese UI textures in `lang/zh_hans/...`. The old `translated/original` directories are still read as compatibility fallbacks.
 
 ### Chinese Fonts
 
@@ -229,12 +229,12 @@ Game:setLanguage("en")
 
 In this test mod, press F7 to toggle between languages. F6 is reserved by Kristal for debug rendering.
 
-Language and name display settings are persisted to save data:
+Language and name language settings are persisted to save data:
 
 ```lua
 data.lang
 data.langSelected
-data.langNameStyle
+data.langNameLanguage
 data.langDebugTermsTranslated
 ```
 

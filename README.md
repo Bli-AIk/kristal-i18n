@@ -25,7 +25,7 @@
 
 - 🌐 `zh_hans` 语言 ID 及完整中文语言表
 - 🔤 UTF-8 安全的 `[var:name]` 变量替换
-- 👤 `[name:xxx]` 名字引用，支持译名 / 原名切换
+- 👤 `[name:xxx]` 名字引用，支持按语言选择名称
 - 🔍 `auto` 模式自动检测系统语言并匹配最佳可用语言
 - 🔄 运行时语言切换（由集成模组绑定 F7 快捷键），切换结果写入存档
 - 📝 `cutscene:text(..., {id = "text_id"})` 和 `cutscene:choicer(..., {ids = {...}})` 直接按 id 本地化
@@ -67,7 +67,7 @@ scripts/hooks/...
 ```json
 {
     "defaultLanguage": "en",
-    "defaultNameStyle": "translated",
+    "defaultNameLanguage": "en",
     "languages": ["en", "zh_hans"],
     "languageNames": {
         "en": "English",
@@ -93,7 +93,7 @@ scripts/hooks/...
 
 `defaultLanguage` 可设置为具体语言 ID 或 `"auto"`。`"auto"` 会读取系统语言并从 `languages` 列表中选择最接近的可用语言；匹配不到时回退到列表首项或英文。
 
-`defaultNameStyle` 可设置为 `"translated"` 或 `"original"`，控制默认使用译名还是原名。引擎选项中另有独立的 `Debug Mode Terminology`（调试模式专有名词翻译）选项，用于切换 `wave`、`encounter`、`cutscene`、`legend`、`battle`、`object`、`debug` 等调试术语的翻译；该选项与角色名设置相互独立。`engine` 始终翻译为“引擎”。
+`defaultNameLanguage` 接受名称表中的语言 ID，例如 `"en"` 或 `"zh_hans"`。名称语言与文本语言独立，切换文本语言不会自动改动名称语言。引擎选项中另有独立的 `Debug Mode Terminology`（调试模式专有名词翻译）选项，用于切换 `wave`、`encounter`、`cutscene`、`legend`、`battle`、`object`、`debug` 等调试术语的翻译；该选项与角色名设置相互独立。`engine` 始终翻译为“引擎”。
 
 ## 使用方式
 
@@ -133,7 +133,7 @@ lang/names.json
 }
 ```
 
-译名模式使用当前语言的值，原名模式使用 fallback 语言（默认是 `en`）的值。
+名称语言模式直接使用所选语言的值；如果某个名称缺少该语言，则回退到 `en`，最后回退到名称 ID。
 
 正文里可以写名字占位符，让同一条翻译跟随设置切换：
 
@@ -147,8 +147,8 @@ lang/names.json
 
 ```lua
 Game:loc("[name:kris]")
-Game:setNameStyle("original")
-Game:setNameStyle("translated")
+Game:setNameLanguage("en")
+Game:setNameLanguage("zh_hans")
 ```
 
 ### 文本本地化
@@ -201,15 +201,15 @@ Assets.getFont("main")           -- → lang/zh_hans/main.ttf
 Assets.playSound("voice/noelle") -- → lang/zh_hans/voice/noelle.wav
 ```
 
-贴图还支持名字显示方式覆盖层。以 `Assets.getTexture("party/kris/name")` 为例：
+贴图还支持名称语言覆盖层。以 `Assets.getTexture("party/kris/name")` 为例：
 
 ```text
-lang/zh_hans/translated/party/kris/name.png
+lang/zh_hans/zh_hans/party/kris/name.png
 lang/zh_hans/party/kris/name.png
 party/kris/name.png
 ```
 
-当 `Game:getNameStyle()` 为 `"translated"` 时，`translated` 覆盖层优先级最高；切换为 `"original"` 后会优先查找 `original` 覆盖层，找不到则回退到普通语言贴图和本体贴图。需要跟随“译名/原名”设置的贴图应放在对应覆盖层，普通中文 UI 贴图仍放 `lang/zh_hans/...`。
+当 `Game:getNameLanguage()` 为 `"zh_hans"` 时，`zh_hans` 覆盖层优先级最高；选择 `"en"` 时则查找 `en` 覆盖层，找不到会回退到普通语言贴图和本体贴图。需要跟随名称语言设置的贴图应放在对应语言层，普通中文 UI 贴图仍放 `lang/zh_hans/...`。旧版 `translated/original` 目录仍会作为兼容回退读取。
 
 ### 中文字体
 
@@ -229,12 +229,12 @@ Game:setLanguage("en")
 
 在本测试模组中按 F7 可直接切换；F6 保留给 Kristal 的调试渲染功能。
 
-语言和名字显示方式会写入存档：
+语言和名称语言会写入存档：
 
 ```lua
 data.lang
 data.langSelected
-data.langNameStyle
+data.langNameLanguage
 data.langDebugTermsTranslated
 ```
 

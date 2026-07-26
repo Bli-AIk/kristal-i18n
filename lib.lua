@@ -7,9 +7,8 @@ local CJK_FIXED_TEXT_SPACING = 2
 local CJK_DIALOGUE_TEXT_SPACING = 4
 local CJK_DIALOGUE_Y_OFFSET = -1
 local CJK_TYPEWRITER_SPEED_MULTIPLIER = 1 --0.85
-local NAME_STYLE_TRANSLATED = "translated"
-local NAME_STYLE_ORIGINAL = "original"
-local NAME_STYLES = { NAME_STYLE_TRANSLATED, NAME_STYLE_ORIGINAL }
+local LEGACY_NAME_STYLE_TRANSLATED = "translated"
+local LEGACY_NAME_STYLE_ORIGINAL = "original"
 local DEFAULT_LANGUAGE_TOGGLE_KEY = "f7"
 
 local STATIC_TEXT_IDS = {
@@ -300,12 +299,14 @@ local function normalizeNameId(id)
     return id
 end
 
-local function normalizeNameStyle(style)
-    style = tostring(style or NAME_STYLE_TRANSLATED):lower()
-    if style == NAME_STYLE_ORIGINAL or style == "raw" or style == "untranslated" then
-        return NAME_STYLE_ORIGINAL
+local function normalizeNameLanguage(language, fallback_language)
+    language = normalizeLanguageId(language)
+    if language == LEGACY_NAME_STYLE_ORIGINAL or language == "raw" or language == "untranslated" then
+        return FALLBACK_LANGUAGE
+    elseif language == LEGACY_NAME_STYLE_TRANSLATED then
+        return normalizeLanguageId(fallback_language or (Game and Game.lang) or FALLBACK_LANGUAGE)
     end
-    return NAME_STYLE_TRANSLATED
+    return language
 end
 
 local ORIGINAL_TERM_REPLACEMENTS = {
@@ -332,22 +333,6 @@ local function applyOriginalDebugTermReplacements(value)
         value = value:gsub(term.translated, term.original)
     end
     return value
-end
-
-local function getNameStyleIndex(style)
-    style = normalizeNameStyle(style)
-    for index, name_style in ipairs(NAME_STYLES) do
-        if name_style == style then
-            return index
-        end
-    end
-    return 1
-end
-
-local function ensureNameStyleGlobals()
-    Game.langNameStyles = NAME_STYLES
-    Game.langNameStyle = normalizeNameStyle(Game.langNameStyle or getConfig("defaultNameStyle") or NAME_STYLE_TRANSLATED)
-    Game.langNameStyleSelected = getNameStyleIndex(Game.langNameStyle)
 end
 
 local function addLanguageCandidate(candidates, seen, lang)
@@ -951,6 +936,102 @@ local function getLanguageName(lang)
     return names[lang] or names[normalizeLanguageId(lang)] or lang
 end
 
+local function collectNameLanguages(language_set, lang_table)
+    if type(lang_table) ~= "table" or type(lang_table.names) ~= "table" then
+        return
+    end
+
+    for _, entry in pairs(lang_table.names) do
+        if type(entry) == "table" then
+            for language, value in pairs(entry) do
+                if type(value) == "string" then
+                    language_set[normalizeLanguageId(language)] = true
+                end
+            end
+        end
+    end
+end
+
+local function getNameLanguageList()
+    local available = {}
+    collectNameLanguages(available, Game.langBaseStr)
+    collectNameLanguages(available, Game.langStr)
+
+    local configured = getConfig("nameLanguages")
+    if type(configured) ~= "table" then
+        configured = getLanguageList()
+    end
+
+    local result = {}
+    local seen = {}
+    local function add(language)
+        language = normalizeLanguageId(language)
+        if available[language] and not seen[language] then
+            table.insert(result, language)
+            seen[language] = true
+        end
+    end
+
+    for _, language in ipairs(configured) do
+        add(language)
+    end
+
+    local remaining = {}
+    for language in pairs(available) do
+        if not seen[language] then
+            table.insert(remaining, language)
+        end
+    end
+    table.sort(remaining)
+    for _, language in ipairs(remaining) do
+        table.insert(result, language)
+    end
+
+    if #result == 0 then
+        table.insert(result, FALLBACK_LANGUAGE)
+    end
+    return result
+end
+
+local function getDefaultNameLanguage(available)
+    local configured = getConfig("defaultNameLanguage")
+    if configured == nil then
+        local legacy_style = getConfig("defaultNameStyle")
+        if legacy_style ~= nil then
+            configured = legacy_style
+        end
+    end
+    configured = configured or (Game and Game.lang) or FALLBACK_LANGUAGE
+
+    return matchAvailableLanguage(normalizeNameLanguage(configured, Game and Game.lang), available)
+        or matchAvailableLanguage(Game and Game.lang or FALLBACK_LANGUAGE, available)
+        or matchAvailableLanguage(FALLBACK_LANGUAGE, available)
+        or available[1]
+        or FALLBACK_LANGUAGE
+end
+
+local function getNameLanguageIndex(language)
+    for index, available in ipairs(Game.langNameLanguages or {}) do
+        if available == language then
+            return index
+        end
+    end
+    return 1
+end
+
+local function ensureNameLanguageGlobals()
+    Game.langNameLanguages = getNameLanguageList()
+    local requested = Game.langNameLanguage
+        or getConfig("defaultNameLanguage")
+        or getConfig("defaultNameStyle")
+        or Game.lang
+    Game.langNameLanguage = matchAvailableLanguage(
+        normalizeNameLanguage(requested, Game.lang),
+        Game.langNameLanguages
+    ) or getDefaultNameLanguage(Game.langNameLanguages)
+    Game.langNameLanguageSelected = getNameLanguageIndex(Game.langNameLanguage)
+end
+
 local function ensureLanguageGlobals()
     Game.langAvailable = getLanguageList()
     -- Keep the original library's misspelled field as an alias for existing hooks/mod code.
@@ -970,7 +1051,7 @@ local function ensureLanguageGlobals()
         end
     end
 
-    ensureNameStyleGlobals()
+    ensureNameLanguageGlobals()
 end
 
 local function readJsonIfExists(path)
@@ -1078,14 +1159,8 @@ local function resolveName(id, default)
     ensureLanguageGlobals()
 
     id = normalizeNameId(id)
-    local language = normalizeLanguageId(Game.lang or DEFAULT_LANGUAGE)
-    local primary_language = language
+    local primary_language = Game.langNameLanguage or FALLBACK_LANGUAGE
     local fallback_language = FALLBACK_LANGUAGE
-
-    if Game.langNameStyle == NAME_STYLE_ORIGINAL then
-        primary_language = FALLBACK_LANGUAGE
-        fallback_language = language
-    end
 
     return getNameFromTable(Game.langStr, id, primary_language, fallback_language)
         or getNameFromTable(Game.langBaseStr, id, primary_language, fallback_language)
@@ -1168,11 +1243,19 @@ local function getLocalizedTexturePaths(path)
     end
 
     local lang = Game.lang or FALLBACK_LANGUAGE
-    local style = normalizeNameStyle(Game.langNameStyle)
-    return {
-        "lang/" .. lang .. "/" .. style .. "/" .. path,
+    local name_language = Game.langNameLanguage or lang
+    local paths = {
+        "lang/" .. lang .. "/" .. name_language .. "/" .. path,
         "lang/" .. lang .. "/" .. path,
     }
+
+    -- Keep loading v2.0 name-style assets while mods migrate to language layers.
+    if name_language == lang then
+        table.insert(paths, "lang/" .. lang .. "/translated/" .. path)
+    elseif name_language == FALLBACK_LANGUAGE then
+        table.insert(paths, "lang/" .. lang .. "/original/" .. path)
+    end
+    return paths
 end
 
 local function getLocalizedTextureAsset(orig, path)
@@ -1980,8 +2063,18 @@ function langLibZh:load(data)
     Game.lang = resolveLanguageId(data.lang or Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
         or getDefaultLanguage(Game.langAvailable)
     Game.langSelected = data.langSelected or Game.langSelected or 1
-    Game.langNameStyle = normalizeNameStyle(data.langNameStyle or data.nameStyle or Game.langNameStyle or getConfig("defaultNameStyle"))
-    Game.langNameStyleSelected = getNameStyleIndex(Game.langNameStyle)
+    local saved_name_language = data.langNameLanguage
+    if saved_name_language == nil then
+        local legacy_style = data.langNameStyle or data.nameStyle
+        if legacy_style == LEGACY_NAME_STYLE_ORIGINAL then
+            saved_name_language = FALLBACK_LANGUAGE
+        elseif legacy_style == LEGACY_NAME_STYLE_TRANSLATED then
+            saved_name_language = Game.lang
+        else
+            saved_name_language = legacy_style
+        end
+    end
+    Game.langNameLanguage = saved_name_language or Game.langNameLanguage
     Game.langDebugTermsTranslated = data.langDebugTermsTranslated ~= false
 
     Game:loadLang(Game.lang)
@@ -1991,7 +2084,9 @@ end
 function langLibZh:save(data)
     data.lang = Game.lang
     data.langSelected = Game.langSelected
-    data.langNameStyle = Game.langNameStyle
+    data.langNameLanguage = Game.langNameLanguage
+    data.langNameStyle = nil
+    data.nameStyle = nil
     data.langDebugTermsTranslated = Game:getDebugTermsTranslated()
     return data
 end
@@ -2005,6 +2100,7 @@ function Game:loadLang(lang)
     Game.langBaseStr = loadLangTable(FALLBACK_LANGUAGE)
     Game.langStr = loadLangTable(lang)
     Game.lang = lang
+    ensureNameLanguageGlobals()
 
     for index, available in ipairs(Game.langAvailable) do
         if available == lang then
@@ -2050,12 +2146,20 @@ function Game:getLanguages()
     return tableCopy(Game.langAvailable)
 end
 
-function Game:setNameStyle(style, refresh_assets)
+function Game:setNameLanguage(language, refresh_assets)
     ensureLanguageGlobals()
-    local old_style = Game.langNameStyle
-    Game.langNameStyle = normalizeNameStyle(style)
-    Game.langNameStyleSelected = getNameStyleIndex(Game.langNameStyle)
-    if old_style ~= Game.langNameStyle then
+    local resolved = matchAvailableLanguage(
+        normalizeNameLanguage(language, Game.lang),
+        Game.langNameLanguages
+    )
+    if not resolved then
+        return false
+    end
+
+    local old_language = Game.langNameLanguage
+    Game.langNameLanguage = resolved
+    Game.langNameLanguageSelected = getNameLanguageIndex(Game.langNameLanguage)
+    if old_language ~= Game.langNameLanguage then
         refreshBattleLocalization()
         if refresh_assets ~= false then
             refreshLocalizedAssets()
@@ -2064,9 +2168,9 @@ function Game:setNameStyle(style, refresh_assets)
     return true
 end
 
-function Game:getNameStyle()
+function Game:getNameLanguage()
     ensureLanguageGlobals()
-    return Game.langNameStyle
+    return Game.langNameLanguage
 end
 
 function Game:setDebugTermsTranslated(translated)
@@ -2078,16 +2182,35 @@ function Game:getDebugTermsTranslated()
     return Game.langDebugTermsTranslated ~= false
 end
 
+function Game:getNameLanguages()
+    ensureLanguageGlobals()
+    return tableCopy(Game.langNameLanguages)
+end
+
+function Game:getNameLanguageName(language)
+    ensureLanguageGlobals()
+    language = matchAvailableLanguage(
+        normalizeNameLanguage(language or Game.langNameLanguage, Game.lang),
+        Game.langNameLanguages
+    ) or Game.langNameLanguage
+    return getLanguageName(language)
+end
+
+-- Compatibility for mods and saves written before name languages were introduced.
+function Game:setNameStyle(style, refresh_assets)
+    return Game:setNameLanguage(style, refresh_assets)
+end
+
+function Game:getNameStyle()
+    return Game:getNameLanguage()
+end
+
 function Game:getNameStyles()
-    return tableCopy(NAME_STYLES)
+    return Game:getNameLanguages()
 end
 
 function Game:getNameStyleName(style)
-    style = normalizeNameStyle(style or Game.langNameStyle)
-    if style == NAME_STYLE_ORIGINAL then
-        return Game:loc("Original", "name_style_original_config")
-    end
-    return Game:loc("Translated", "name_style_translated_config")
+    return Game:getNameLanguageName(style)
 end
 
 function Game:loc(default, id, var)

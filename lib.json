@@ -1,11 +1,11 @@
 {
     "id": "langLibZh",
     "authors": ["Elioze", "Aik/Codex zh-hans fork"],
-    "version": "2.0.0-zh-hans",
+    "version": "2.1.0-zh-hans",
     "engineVer": "v0.10.0",
     "config": {
         "defaultLanguage": "en",
-        "defaultNameStyle": "translated",
+        "defaultNameLanguage": "en",
         "languages": ["en", "zh_hans"],
         "languageNames": {
             "en": "English",

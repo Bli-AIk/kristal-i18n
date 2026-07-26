@@ -57,12 +57,12 @@ local function changeLanguage(direction)
     return false
 end
 
-local function changeNameStyle(direction)
-    local styles = Game:getNameStyles()
-    local old_style = Game:getNameStyle()
-    Game.langNameStyleSelected = MathUtils.clamp((Game.langNameStyleSelected or 1) + direction, 1, #styles)
-    Game:setNameStyle(styles[Game.langNameStyleSelected])
-    return old_style ~= Game:getNameStyle()
+local function changeNameLanguage(direction)
+    local languages = Game:getNameLanguages()
+    local old_language = Game:getNameLanguage()
+    Game.langNameLanguageSelected = MathUtils.clamp((Game.langNameLanguageSelected or 1) + direction, 1, #languages)
+    Game:setNameLanguage(languages[Game.langNameLanguageSelected])
+    return old_language ~= Game:getNameLanguage()
 end
 
 function DarkConfigMenu:update()
@@ -186,14 +186,14 @@ function DarkConfigMenu:update()
             if self.language_selected == 1 then
                 changed = changeLanguage(-1)
             elseif self.language_selected == 2 then
-                changed = changeNameStyle(-1)
+                changed = changeNameLanguage(-1)
             end
         end
         if Input.pressed("right") then
             if self.language_selected == 1 then
                 changed = changeLanguage(1)
             elseif self.language_selected == 2 then
-                changed = changeNameStyle(1)
+                changed = changeNameLanguage(1)
             end
         end
 
@@ -221,12 +221,12 @@ function DarkConfigMenu:draw()
         local selection = getLanguageMenuSelection(self)
         local labels = {
             Game:loc("Text Language", "text_language_config"),
-            Game:loc("Character Names", "name_style_config"),
+            Game:loc("Character Names", "name_language_config"),
             Game:loc("Back", "back_config"),
         }
         local values = {
             Game:getLanguageName(),
-            Game:getNameStyleName(),
+            Game:getNameLanguageName(),
             nil,
         }
 
