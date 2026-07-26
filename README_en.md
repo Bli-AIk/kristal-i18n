@@ -25,7 +25,7 @@ Once the library is installed, a mod only needs a language JSON file to achieve 
 
 - 🌐 `zh_hans` language ID and complete Chinese language table
 - 🔤 UTF-8-safe `[var:name]` variable substitution
-- 👤 `Game:locName(category, id, default)` with translated/original character name styles
+- 👤 `[name:xxx]` name references with translated/original name styles
 - 🔍 `auto` mode for automatic system language detection and best-match selection
 - 🔄 Runtime language switching (the integration mod binds it to F7), persisted to save data
 - 📝 `cutscene:text(..., {id = "text_id"})` and `cutscene:choicer(..., {ids = {...}})` for direct id-based localization
@@ -50,8 +50,7 @@ lib.json
 lib.lua
 lang/en.json
 lang/zh_hans.json
-lang/names/en.json
-lang/names/zh_hans.json
+lang/names.json
 scripts/hooks/...
 ```
 
@@ -113,45 +112,41 @@ lang/lang_zh-hans.json
 
 ### Character Names
 
-Character names can be kept in:
+All names are kept in:
 
 ```text
-lang/names/zh_hans.json
+lang/names.json
 ```
 
-Format:
+Each name has one ID with language IDs for its values:
 
 ```json
 {
-    "chara": {
-        "kris": {
-            "translated": "克里斯",
-            "original": "Kris"
-        }
+    "kris": {
+        "en": "Kris",
+        "zh_hans": "克里斯"
     },
-    "actor": {
-        "starwalker": {
-            "translated": "星之行者",
-            "original": "Starwalker"
-        }
+    "starwalker": {
+        "en": "Starwalker",
+        "zh_hans": "星之行者"
     }
 }
 ```
 
-`chara` is used for party-member UI names, while `actor` is used for Actor names. Legacy `chara_<id>_name` and `actor_<id>_name` keys are still supported and are merged into the runtime `names` table.
+Translated mode uses the current language value. Original mode uses the fallback language value, which is `en` by default.
 
 You can reference names inside regular text so one translation follows the current setting:
 
 ```json
 {
-    "room1.hello": "* 你好，[name:chara:kris]。"
+    "room1.hello": "* 你好，[name:kris]。"
 }
 ```
 
-Runtime helpers:
+In code, resolve a name through the normal localization entry point:
 
 ```lua
-Game:locName("chara", "kris", "Kris")
+Game:loc("[name:kris]")
 Game:setNameStyle("original")
 Game:setNameStyle("translated")
 ```

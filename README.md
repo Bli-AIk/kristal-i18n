@@ -25,7 +25,7 @@
 
 - 🌐 `zh_hans` 语言 ID 及完整中文语言表
 - 🔤 UTF-8 安全的 `[var:name]` 变量替换
-- 👤 `Game:locName(category, id, default)` 支持角色名译名 / 原名切换
+- 👤 `[name:xxx]` 名字引用，支持译名 / 原名切换
 - 🔍 `auto` 模式自动检测系统语言并匹配最佳可用语言
 - 🔄 运行时语言切换（由集成模组绑定 F7 快捷键），切换结果写入存档
 - 📝 `cutscene:text(..., {id = "text_id"})` 和 `cutscene:choicer(..., {ids = {...}})` 直接按 id 本地化
@@ -50,8 +50,7 @@ lib.json
 lib.lua
 lang/en.json
 lang/zh_hans.json
-lang/names/en.json
-lang/names/zh_hans.json
+lang/names.json
 scripts/hooks/...
 ```
 
@@ -113,45 +112,41 @@ lang/lang_zh-hans.json
 
 ### 角色名
 
-角色名可以单独放在：
+角色名统一放在：
 
 ```text
-lang/names/zh_hans.json
+lang/names.json
 ```
 
-格式：
+每个名字只需要一个 ID，再用语言 ID 区分不同语言：
 
 ```json
 {
-    "chara": {
-        "kris": {
-            "translated": "克里斯",
-            "original": "Kris"
-        }
+    "kris": {
+        "en": "Kris",
+        "zh_hans": "克里斯"
     },
-    "actor": {
-        "starwalker": {
-            "translated": "星之行者",
-            "original": "Starwalker"
-        }
+    "starwalker": {
+        "en": "Starwalker",
+        "zh_hans": "星之行者"
     }
 }
 ```
 
-`chara` 用于队伍成员等 UI 名称，`actor` 用于 Actor 名称。旧的 `chara_<id>_name`、`actor_<id>_name` 仍然兼容，加载时也会自动并入运行时 `names` 表。
+译名模式使用当前语言的值，原名模式使用 fallback 语言（默认是 `en`）的值。
 
 正文里可以写名字占位符，让同一条翻译跟随设置切换：
 
 ```json
 {
-    "room1.hello": "* 你好，[name:chara:kris]。"
+    "room1.hello": "* 你好，[name:kris]。"
 }
 ```
 
-运行时也可以直接取名：
+代码中通过普通本地化入口解析名字：
 
 ```lua
-Game:locName("chara", "kris", "Kris")
+Game:loc("[name:kris]")
 Game:setNameStyle("original")
 Game:setNameStyle("translated")
 ```

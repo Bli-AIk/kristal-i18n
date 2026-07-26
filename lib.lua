@@ -992,59 +992,13 @@ local function langFileCandidates(base_path, lang)
     }
 end
 
-local function nameFileCandidates(base_path, lang)
-    local hyphen_lang = lang:gsub("_", "-")
-    return {
-        base_path .. "/lang/names/" .. lang .. ".json",
-        base_path .. "/lang/names/lang_" .. lang .. ".json",
-        base_path .. "/lang/names/" .. hyphen_lang .. ".json",
-        base_path .. "/lang/names/lang_" .. hyphen_lang .. ".json",
-        base_path .. "/lang/" .. lang .. "_names.json",
-        base_path .. "/lang/lang_" .. lang .. "_names.json",
-        base_path .. "/lang/" .. hyphen_lang .. "_names.json",
-        base_path .. "/lang/lang_" .. hyphen_lang .. "_names.json",
-    }
+local function nameFileCandidates(base_path)
+    return {base_path .. "/lang/names.json"}
 end
 
-local function mergeLegacyNameKey(merged, key, value, lang)
-    if type(value) ~= "string" then
-        return
-    end
-
-    local category, id = key:match("^(chara)_(.+)_name$")
-    if not category then
-        category, id = key:match("^(actor)_(.+)_name$")
-    end
-    if not category then
-        return
-    end
-
-    category = normalizeNameId(category)
-    id = normalizeNameId(id)
-
-    merged.names = merged.names or {}
-    merged.names[category] = merged.names[category] or {}
-
-    local entry = merged.names[category][id]
-    if type(entry) ~= "table" then
-        entry = {}
-    end
-
-    entry.translated = value
-    if lang == FALLBACK_LANGUAGE then
-        entry.original = value
-    end
-    merged.names[category][id] = entry
-end
-
-local function mergeLangTable(merged, data, lang)
+local function mergeLangTable(merged, data)
     for key, value in pairs(data or {}) do
-        if key == "names" and type(value) == "table" then
-            merged.names = deepMerge(merged.names or {}, value)
-        else
-            merged[key] = value
-            mergeLegacyNameKey(merged, key, value, lang)
-        end
+        merged[key] = value
     end
 end
 
@@ -1053,8 +1007,19 @@ local function mergeNameTable(merged, data)
         return
     end
 
-    local names = type(data.names) == "table" and data.names or data
-    merged.names = deepMerge(merged.names or {}, names)
+    merged.names = merged.names or {}
+    for raw_id, languages in pairs(data) do
+        local id = normalizeNameId(raw_id)
+        if type(languages) == "table" then
+            local entry = merged.names[id] or {}
+            for language, value in pairs(languages) do
+                if type(value) == "string" then
+                    entry[normalizeLanguageId(language)] = value
+                end
+            end
+            merged.names[id] = entry
+        end
+    end
 end
 
 local function loadLangTable(lang)
@@ -1072,12 +1037,12 @@ local function loadLangTable(lang)
         for _, path in ipairs(langFileCandidates(base, lang)) do
             local data = readJsonIfExists(path)
             if type(data) == "table" then
-                mergeLangTable(merged, data, lang)
+                mergeLangTable(merged, data)
                 break
             end
         end
 
-        for _, path in ipairs(nameFileCandidates(base, lang)) do
+        for _, path in ipairs(nameFileCandidates(base)) do
             local data = readJsonIfExists(path)
             if type(data) == "table" then
                 mergeNameTable(merged, data)
@@ -1089,66 +1054,47 @@ local function loadLangTable(lang)
     return merged
 end
 
-local function getNameEntry(lang_table, category, id)
+local function getNameEntry(lang_table, id)
     if type(lang_table) ~= "table" or type(lang_table.names) ~= "table" then
         return nil
     end
 
-    local normalized_category = normalizeNameId(category)
     local normalized_id = normalizeNameId(id)
-    local categories = lang_table.names[category] or lang_table.names[normalized_category]
-
-    if type(categories) ~= "table" then
-        return nil
-    end
-
-    return categories[id] or categories[normalized_id]
+    return lang_table.names[id] or lang_table.names[normalized_id]
 end
 
-local function getNameEntryValue(entry, style)
+local function getNameEntryValue(entry, primary_language, fallback_language)
     if type(entry) == "table" then
-        if style == NAME_STYLE_ORIGINAL then
-            return entry.original or entry.raw or entry.untranslated
-        end
-        return entry.translated or entry.name or entry.localized
-    end
-    if type(entry) == "string" and style == NAME_STYLE_TRANSLATED then
-        return entry
+        return entry[primary_language] or entry[fallback_language]
     end
     return nil
 end
 
-local function getNameFromTable(lang_table, category, id, style)
-    return getNameEntryValue(getNameEntry(lang_table, category, id), style)
+local function getNameFromTable(lang_table, id, primary_language, fallback_language)
+    return getNameEntryValue(getNameEntry(lang_table, id), primary_language, fallback_language)
 end
 
-local function getLegacyName(lang_table, category, id)
-    if type(lang_table) ~= "table" then
-        return nil
+local function resolveName(id, default)
+    ensureLanguageGlobals()
+
+    id = normalizeNameId(id)
+    local language = normalizeLanguageId(Game.lang or DEFAULT_LANGUAGE)
+    local primary_language = language
+    local fallback_language = FALLBACK_LANGUAGE
+
+    if Game.langNameStyle == NAME_STYLE_ORIGINAL then
+        primary_language = FALLBACK_LANGUAGE
+        fallback_language = language
     end
-    return lang_table[normalizeNameId(category) .. "_" .. normalizeNameId(id) .. "_name"]
+
+    return getNameFromTable(Game.langStr, id, primary_language, fallback_language)
+        or getNameFromTable(Game.langBaseStr, id, primary_language, fallback_language)
+        or tostring(default or id)
 end
 
 local function replaceNameReferences(str)
-    return (str:gsub("%[name:([^%]]+)%]", function(reference)
-        local parts = {}
-        for part in reference:gmatch("[^:]+") do
-            table.insert(parts, part)
-        end
-
-        local category, id
-        if #parts == 1 then
-            category = "chara"
-            id = parts[1]
-        else
-            category = parts[1]
-            id = parts[2]
-        end
-
-        if Game.locName then
-            return Game:locName(category, id, id)
-        end
-        return tostring(id or "")
+    return (str:gsub("%[name:([^:%]]+)%]", function(id)
+        return resolveName(id, id)
     end))
 end
 
@@ -1562,7 +1508,6 @@ function langLibZh:onKeyPressed(key, is_repeat)
     local next_language = Game:getLanguage() == "zh_hans" and "en" or "zh_hans"
     if Game:setLanguage(next_language) then
         refreshMapName()
-        refreshBattleLocalization()
 
         local message = Game:loc("* Language switched to [var:language].", "lang_language_switched", {
             language = Game:getLanguageName()
@@ -2078,6 +2023,8 @@ function Game:setLanguage(lang, refresh_assets)
     end
 
     Game:loadLang(lang)
+    refreshMapName()
+    refreshBattleLocalization()
     if refresh_assets ~= false then
         refreshLocalizedAssets()
     end
@@ -2108,8 +2055,11 @@ function Game:setNameStyle(style, refresh_assets)
     local old_style = Game.langNameStyle
     Game.langNameStyle = normalizeNameStyle(style)
     Game.langNameStyleSelected = getNameStyleIndex(Game.langNameStyle)
-    if refresh_assets ~= false and old_style ~= Game.langNameStyle then
-        refreshLocalizedAssets()
+    if old_style ~= Game.langNameStyle then
+        refreshBattleLocalization()
+        if refresh_assets ~= false then
+            refreshLocalizedAssets()
+        end
     end
     return true
 end
@@ -2138,27 +2088,6 @@ function Game:getNameStyleName(style)
         return Game:loc("Original", "name_style_original_config")
     end
     return Game:loc("Translated", "name_style_translated_config")
-end
-
-function Game:locName(category, id, default)
-    ensureLanguageGlobals()
-
-    category = normalizeNameId(category)
-    id = normalizeNameId(id)
-
-    if Game.langNameStyle == NAME_STYLE_ORIGINAL then
-        return getNameFromTable(Game.langStr, category, id, NAME_STYLE_ORIGINAL)
-            or getNameFromTable(Game.langBaseStr, category, id, NAME_STYLE_ORIGINAL)
-            or getNameFromTable(Game.langBaseStr, category, id, NAME_STYLE_TRANSLATED)
-            or getLegacyName(Game.langBaseStr, category, id)
-            or tostring(default or id)
-    end
-
-    return getNameFromTable(Game.langStr, category, id, NAME_STYLE_TRANSLATED)
-        or getLegacyName(Game.langStr, category, id)
-        or getNameFromTable(Game.langBaseStr, category, id, NAME_STYLE_TRANSLATED)
-        or getLegacyName(Game.langBaseStr, category, id)
-        or tostring(default or id)
 end
 
 function Game:loc(default, id, var)
