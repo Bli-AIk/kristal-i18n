@@ -548,6 +548,23 @@ local function addCjkTextSpacingValue(value, spacing_value, offset_y)
     return addCjkTextSpacing(value, spacing_value, offset_y)
 end
 
+local function isBattleSpeechDialogue(dialogue)
+    if not Game.battle or not dialogue then
+        return false
+    end
+
+    return dialogue.font == "plain" or dialogue.font == "zh_plain"
+end
+
+local function setBattleSpeechDialogueFont(dialogue)
+    if not isBattleSpeechDialogue(dialogue) then
+        return false
+    end
+
+    dialogue.font = Game.lang == "zh_hans" and "zh_plain" or "plain"
+    return true
+end
+
 local localizeDebugPatternText
 
 local function localizeStaticText(text)
@@ -1770,6 +1787,13 @@ function kristalI18n:postInit()
 
     HookSystem.hook(DialogueText, "setText", function(orig, self, text, ...)
         text = localizeStaticTextValue(text)
+
+        -- Battle speech bubbles use a Chinese-capable plain font directly.
+        -- Keep the extra spacing and offset for other DialogueText instances.
+        if setBattleSpeechDialogueFont(self) then
+            return orig(self, text, ...)
+        end
+
         return orig(self, addCjkTextSpacingValue(text, CJK_DIALOGUE_TEXT_SPACING, CJK_DIALOGUE_Y_OFFSET), ...)
     end)
 
