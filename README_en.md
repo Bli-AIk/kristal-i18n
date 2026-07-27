@@ -1,4 +1,4 @@
-# langLib_zh_hans
+# kristal-i18n
 
 [![license](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-APACHE)
 <br>
@@ -9,7 +9,7 @@
 
 ![Screenshot](./screenshot.png)
 
-**langLib_zh_hans** — a Chinese localization library for Kristal `v0.10.x`, forked from Elioze's [LangLib](https://gamebanana.com/mods/627141) on GameBanana and tailored for Chinese localization projects.
+**kristal-i18n** — a multilingual localization library for Kristal `v0.10.x`, modified from Elioze's [LangLib](https://gamebanana.com/mods/627141) on GameBanana, with English and Simplified Chinese resources included.
 
 | English | 简体中文 |
 |---------|---------|
@@ -17,18 +17,18 @@
 
 ## Introduction
 
-`langLib_zh_hans` provides complete Chinese localization capabilities for Kristal mods. While retaining the `Game:loc(default, id, var)` main API, it adds features essential for Chinese localization: UTF-8-safe variable substitution, automatic system language detection, runtime language switching, and a per-language asset override system covering fonts, sprites, audio, and video.
+`kristal-i18n` provides multilingual localization for Kristal mods. Text is looked up by stable IDs; a missing ID is rendered as a red error marker instead of silently using an English fallback from code. It also provides UTF-8-safe variable substitution, automatic system language detection, runtime language switching, and per-language asset overrides for fonts, sprites, audio, and video.
 
 Once the library is installed, a mod only needs a language JSON file to achieve full Chinese localization — no game logic changes required.
 
 ## Features
 
-- 🌐 `zh_hans` language ID and complete Chinese language table
+- 🌐 Language-ID based text and asset tables with built-in `en` and `zh_hans`
 - 🔤 UTF-8-safe `[var:name]` variable substitution
 - 👤 `[name:xxx]` name references with a selectable name language
 - 🔍 `auto` mode for automatic system language detection and best-match selection
 - 🔄 Runtime language switching (the integration mod binds it to F7), persisted to save data
-- 📝 `cutscene:text(..., {id = "text_id"})` and `cutscene:choicer(..., {ids = {...}})` for direct id-based localization
+- 📝 `Game:loc(id, vars)`, `cutscene:text(..., {id = "text_id"})`, and `cutscene:choicer(..., {ids = {...}})` for ID-based localization
 - 🎨 Language-specific asset overrides: fonts, sprites, audio, music, and video via `lang/<lang>/...` paths
 - 🔣 Automatic CJK character spacing adjustment and typewriter speed correction
 - 📋 Automatic hooks for text, choices, Tiled NPC/Interactable, items, spells, and menus
@@ -40,7 +40,7 @@ Once the library is installed, a mod only needs a language JSON file to achieve 
 Place the entire directory into your target mod:
 
 ```text
-mods/your_mod/libraries/langLib_zh_hans/
+mods/your_mod/libraries/kristal-i18n/
 ```
 
 The directory must include:
@@ -80,7 +80,7 @@ Override in your mod's `mod.json`:
 
 ```json
 "config": {
-    "langLibZh": {
+    "kristalI18n": {
         "defaultLanguage": "auto",
         "languages": ["en", "zh_hans"],
         "languageNames": {
@@ -93,7 +93,7 @@ Override in your mod's `mod.json`:
 
 `defaultLanguage` can be a specific language ID or `"auto"`. `"auto"` reads the system language and selects the closest match from the `languages` list; if no match is found, it falls back to the first item or English.
 
-`defaultNameLanguage` accepts a language ID present in the name table, such as `"en"` or `"zh_hans"`. Name language is independent from text language, so changing the text language does not change the selected name language. The Engine Options menu has a separate `Debug Mode Terminology` option for toggling translations of terms such as `wave`, `encounter`, `cutscene`, `legend`, `battle`, `object`, and `debug`; it is independent from the character-name setting. `engine` remains translated as `引擎`.
+`defaultNameLanguage` accepts a language ID present in the name table, such as `"en"` or `"zh_hans"`. Name language is independent from text language, and the settings menu displays the actual language names instead of an original/translated mode. The Engine Options menu has a separate `Debug Mode Terminology` option for toggling translations of terms such as `wave`, `encounter`, `cutscene`, `legend`, `battle`, `object`, and `debug`; it is independent from the character-name setting. `engine` remains translated as `引擎`.
 
 ## Usage
 
@@ -146,17 +146,17 @@ You can reference names inside regular text so one translation follows the curre
 In code, resolve a name through the normal localization entry point:
 
 ```lua
-Game:loc("[name:kris]")
+Game:locText("[name:kris]")
 Game:setNameLanguage("en")
 Game:setNameLanguage("zh_hans")
 ```
 
 ### Text Localization
 
-Direct call:
+Call by ID:
 
 ```lua
-cutscene:text(Game:loc("* Hello, [var:name].", "room1.hello", {name = "Kris"}))
+cutscene:text(Game:loc("room1.hello", {name = "Kris"}))
 ```
 
 Language table:
@@ -166,6 +166,8 @@ Language table:
     "room1.hello": "* 你好，[var:name]。"
 }
 ```
+
+The first argument to `Game:loc` is always an ID; English fallback text is no longer accepted. For rich text that intentionally does not belong in a language table, use the explicit `Game:locText(text, vars)` entry point.
 
 You can also pass the id directly in `cutscene:text`:
 
@@ -209,7 +211,7 @@ lang/zh_hans/party/kris/name.png
 party/kris/name.png
 ```
 
-When `Game:getNameLanguage()` is `"zh_hans"`, the `zh_hans` layer has the highest priority. Selecting `"en"` checks the `en` layer instead, then falls back to the normal language override and the base asset. Put textures that should follow the name language in the matching language layer; keep normal Chinese UI textures in `lang/zh_hans/...`. The old `translated/original` directories are still read as compatibility fallbacks.
+When `Game:getNameLanguage()` is `"zh_hans"`, the `zh_hans` layer has the highest priority. Selecting `"en"` checks the `en` layer instead, then falls back to the normal language override and the base asset. Put textures that should follow the name language in the matching language layer; keep normal Chinese UI textures in `lang/zh_hans/...`.
 
 ### Chinese Fonts
 

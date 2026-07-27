@@ -2,7 +2,7 @@ local DarkStorageMenu, super = HookSystem.hookScript(DarkStorageMenu)
 
 function DarkStorageMenu:updateDescription()
     local item = self:getSelectedItem(self.list)
-    local new_text = Game:loc("---", "no_item_storage")
+    local new_text = Game:loc("no_item_storage")
     if item then
         new_text = item:getDescription()
     end
@@ -27,13 +27,15 @@ function DarkStorageMenu:drawStorage(list)
 
     Draw.setColor(self.list == list and PALETTE["world_light_gray"] or PALETTE["world_dark_gray"])
     local storage_name = storage.id == "items"
-        and Game:loc("POCKET", "pocket_sotrage")
-        or Game:loc(storage.name, "storage_" .. tostring(storage.id))
+        and Game:loc("pocket_sotrage")
+        or (Game:hasStr("storage_" .. tostring(storage.id))
+            and Game:loc("storage_" .. tostring(storage.id))
+            or Game:locText(storage.name))
     love.graphics.print(storage_name, name_text_x, name_text_y)
 
     local max_pages = self:getMaxPages(list)
     if max_pages > 1 then
-        love.graphics.print(Game:loc("Page", "page_storage"), page_text_x, page_text_y)
+        love.graphics.print(Game:loc("page_storage"), page_text_x, page_text_y)
         love.graphics.print(self.selected_page[list].."/"..max_pages, page_text_x, page_text_y + 20)
     end
 
@@ -57,7 +59,7 @@ function DarkStorageMenu:drawStorage(list)
             if item then
                 love.graphics.print(item:getName(), x, y)
             else
-                love.graphics.print(Game:loc("---", "no_item_storage"), x, y)
+                love.graphics.print(Game:loc("no_item_storage"), x, y)
             end
         end
     end

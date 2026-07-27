@@ -1,4 +1,4 @@
-# langLib_zh_hans
+# kristal-i18n
 
 [![license](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-APACHE)
 <br>
@@ -9,7 +9,7 @@
 
 ![效果图](./screenshot.png)
 
-**langLib_zh_hans** — Kristal `v0.10.x` 用中文本地化库，基于 GameBanana 上 Elioze 的 [LangLib](https://gamebanana.com/mods/627141) 改造，面向中文汉化工程使用。
+**kristal-i18n** — Kristal `v0.10.x` 的多语言本地化库，基于 GameBanana 上 Elioze 的 [LangLib](https://gamebanana.com/mods/627141) 修改，当前附带英文与简体中文资源。
 
 | 简体中文 | English |
 |---------|---------|
@@ -17,18 +17,18 @@
 
 ## 简介
 
-`langLib_zh_hans` 为 Kristal 模组提供完整的中文汉化能力。它在保留 `Game:loc(default, id, var)` 主 API 的基础上，补充了中文工程常用特性：UTF-8 安全的变量替换、系统语言自动检测、运行时语言切换、以及覆盖字体/贴图/音频/视频的按语言资源系统。
+`kristal-i18n` 为 Kristal 模组提供多语言本地化能力。文本通过稳定的 ID 查表，缺失 ID 会显示红色错误标记，而不会把英文 fallback 静默混入代码。库还提供 UTF-8 安全的变量替换、系统语言自动检测、运行时语言切换，以及按语言覆盖字体/贴图/音频/视频的资源系统。
 
 引入本库后，模组只需编写语言表 JSON 文件即可实现完整中文化，无需修改游戏逻辑代码。
 
 ## 特性
 
-- 🌐 `zh_hans` 语言 ID 及完整中文语言表
+- 🌐 按语言 ID 管理文本与资源，内置 `en`、`zh_hans`
 - 🔤 UTF-8 安全的 `[var:name]` 变量替换
 - 👤 `[name:xxx]` 名字引用，支持按语言选择名称
 - 🔍 `auto` 模式自动检测系统语言并匹配最佳可用语言
 - 🔄 运行时语言切换（由集成模组绑定 F7 快捷键），切换结果写入存档
-- 📝 `cutscene:text(..., {id = "text_id"})` 和 `cutscene:choicer(..., {ids = {...}})` 直接按 id 本地化
+- 📝 `Game:loc(id, vars)`、`cutscene:text(..., {id = "text_id"})` 和 `cutscene:choicer(..., {ids = {...}})` 按 ID 本地化
 - 🎨 资源按语言覆盖：字体、贴图、音频、音乐、视频均可放到 `lang/<语言>/...` 路径
 - 🔣 CJK 字符自动字间距调整与打字机速度修正
 - 📋 文本、选项、Tiled NPC/Interactable、物品、技能、菜单等常见入口自动 hook
@@ -40,7 +40,7 @@
 将整个目录放入目标模组：
 
 ```text
-mods/your_mod/libraries/langLib_zh_hans/
+mods/your_mod/libraries/kristal-i18n/
 ```
 
 目录中需要包含：
@@ -80,7 +80,7 @@ scripts/hooks/...
 
 ```json
 "config": {
-    "langLibZh": {
+    "kristalI18n": {
         "defaultLanguage": "auto",
         "languages": ["en", "zh_hans"],
         "languageNames": {
@@ -93,7 +93,7 @@ scripts/hooks/...
 
 `defaultLanguage` 可设置为具体语言 ID 或 `"auto"`。`"auto"` 会读取系统语言并从 `languages` 列表中选择最接近的可用语言；匹配不到时回退到列表首项或英文。
 
-`defaultNameLanguage` 接受名称表中的语言 ID，例如 `"en"` 或 `"zh_hans"`。名称语言与文本语言独立，切换文本语言不会自动改动名称语言。引擎选项中另有独立的 `Debug Mode Terminology`（调试模式专有名词翻译）选项，用于切换 `wave`、`encounter`、`cutscene`、`legend`、`battle`、`object`、`debug` 等调试术语的翻译；该选项与角色名设置相互独立。`engine` 始终翻译为“引擎”。
+`defaultNameLanguage` 接受名称表中的语言 ID，例如 `"en"` 或 `"zh_hans"`。名称语言与文本语言独立，设置菜单显示实际语言名称，切换文本语言不会自动改动名称语言。引擎选项中另有独立的 `Debug Mode Terminology`（调试模式专有名词翻译）选项，用于切换 `wave`、`encounter`、`cutscene`、`legend`、`battle`、`object`、`debug` 等调试术语的翻译；该选项与角色名设置相互独立。`engine` 始终翻译为“引擎”。
 
 ## 使用方式
 
@@ -146,17 +146,17 @@ lang/names.json
 代码中通过普通本地化入口解析名字：
 
 ```lua
-Game:loc("[name:kris]")
+Game:locText("[name:kris]")
 Game:setNameLanguage("en")
 Game:setNameLanguage("zh_hans")
 ```
 
 ### 文本本地化
 
-直接调用：
+通过 ID 调用：
 
 ```lua
-cutscene:text(Game:loc("* 你好，[var:name]。", "room1.hello", {name = "Kris"}))
+cutscene:text(Game:loc("room1.hello", {name = "Kris"}))
 ```
 
 语言表：
@@ -166,6 +166,8 @@ cutscene:text(Game:loc("* 你好，[var:name]。", "room1.hello", {name = "Kris"
     "room1.hello": "* 你好，[var:name]。"
 }
 ```
+
+`Game:loc` 的第一个参数始终是 ID，不再接受英文 fallback。需要处理没有进入语言表的原始富文本时，显式使用 `Game:locText(text, vars)`。
 
 也可以在 `cutscene:text` 中直接传 id：
 
@@ -209,7 +211,7 @@ lang/zh_hans/party/kris/name.png
 party/kris/name.png
 ```
 
-当 `Game:getNameLanguage()` 为 `"zh_hans"` 时，`zh_hans` 覆盖层优先级最高；选择 `"en"` 时则查找 `en` 覆盖层，找不到会回退到普通语言贴图和本体贴图。需要跟随名称语言设置的贴图应放在对应语言层，普通中文 UI 贴图仍放 `lang/zh_hans/...`。旧版 `translated/original` 目录仍会作为兼容回退读取。
+当 `Game:getNameLanguage()` 为 `"zh_hans"` 时，`zh_hans` 覆盖层优先级最高；选择 `"en"` 时则查找 `en` 覆盖层，找不到会回退到普通语言贴图和本体贴图。需要跟随名称语言设置的贴图应放在对应语言层，普通中文 UI 贴图仍放 `lang/zh_hans/...`。
 
 ### 中文字体
 

@@ -1,7 +1,7 @@
 {
-    "id": "langLibZh",
-    "authors": ["Elioze", "Aik/Codex zh-hans fork"],
-    "version": "2.1.0-zh-hans",
+    "id": "kristalI18n",
+    "authors": ["Aik"],
+    "version": "0.1.0",
     "engineVer": "v0.10.0",
     "config": {
         "defaultLanguage": "en",

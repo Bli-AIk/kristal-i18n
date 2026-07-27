@@ -10,9 +10,9 @@ function LightInventory:tryGiveItem(item, ignore_dark)
         local dark_inv = self:getDarkInventory()
         local result = dark_inv:addItem(item)
         if result then
-            return true, Game:loc("* ([color:yellow][var:itemName][color:reset] was added to your [color:yellow]BALL OF JUNK[color:reset].)", "inventory_tryGiveDarkTrue", {itemName = item:getName()})
+            return true, Game:loc("inventory_tryGiveDarkTrue", {itemName = item:getName()})
         else
-            return false, Game:loc("* (Your [color:yellow]BALL OF JUNK[color:reset] is too big to take [color:yellow][var:itemName][color:reset].)", "inventory_tryGiveDarkFalse", {itemName = item:getName()})
+            return false, Game:loc("inventory_tryGiveDarkFalse", {itemName = item:getName()})
         end
     end
 end

@@ -1,7 +1,8 @@
 local Inventory, super = HookSystem.hookScript(Inventory)
 
 local function getStorageName(storage)
-    return Game:loc(storage.name, "storage_" .. tostring(storage.id))
+    local id = "storage_" .. tostring(storage.id)
+    return Game:hasStr(id) and Game:loc(id) or Game:locText(storage.name)
 end
 
 function Inventory:tryGiveItem(item, ignore_convert)
@@ -11,10 +12,10 @@ function Inventory:tryGiveItem(item, ignore_convert)
     local result = self:addItem(item, ignore_convert)
     if result then
         local destination = self:getStorage(self.stored_items[result].storage)
-        return true, Game:loc("* ([color:yellow][var:itemName][color:reset] was added to your [color:yellow][var:destinationName][color:reset].)", "inventory_giveItemTrue", {itemName = item:getName(), destinationName = getStorageName(destination)})
+        return true, Game:loc("inventory_giveItemTrue", {itemName = item:getName(), destinationName = getStorageName(destination)})
     else
         local destination = self:getDefaultStorage(item)
-        return false, Game:loc("* (You have too many [color:yellow][var:destinationName][color:reset] to take [color:yellow][var:itemName][color:reset].)", "inventory_giveItemFalse", {destinationName = getStorageName(destination), itemName = item:getName()})
+        return false, Game:loc("inventory_giveItemFalse", {destinationName = getStorageName(destination), itemName = item:getName()})
     end
 end
 

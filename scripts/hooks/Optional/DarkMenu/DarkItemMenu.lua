@@ -3,7 +3,7 @@ local DarkItemMenu, super = HookSystem.hookScript(DarkItemMenu)
 function DarkItemMenu:draw()
     love.graphics.setFont(self.font)
 
-    local headers = {Game:loc("USE", "use_item"), Game:loc("TOSS", "toss_item"), Game:loc("KEY", "key_item")}
+    local headers = {Game:loc("use_item"), Game:loc("toss_item"), Game:loc("key_item")}
 
     for i,name in ipairs(headers) do
         if self.state == "MENU" then

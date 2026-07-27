@@ -28,7 +28,7 @@ function Interactable:onInteract(player, dir)
             end
             for index,line in ipairs(text) do
                 local id_line = type(id) == "table" and id[index] or nil
-                line = Game:loc(line, id_line)
+                line = id_line and Game:loc(id_line) or Game:locText(line)
                 c:text(line)
             end
         end)

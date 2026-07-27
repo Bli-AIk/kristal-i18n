@@ -10,11 +10,8 @@ local function formatLocalizedInput(text, mode)
 end
 
 local function localizeInputText(default, id, mode)
-    local text = Game:loc(default, id)
-    if Game.lang == "en" or not (Game.langStr and Game.langStr[id] ~= nil) then
-        return formatLocalizedInput(text, mode)
-    end
-    return text
+    local text = Game:hasStr(id) and Game:loc(id) or Game:locText(default)
+    return formatLocalizedInput(text, mode)
 end
 
 local function localizeAlias(alias)
@@ -216,13 +213,13 @@ function DarkConfigMenu:draw()
     Draw.setColor(PALETTE["world_text"])
 
     if self.state == "LANGUAGE" then
-        love.graphics.print(Game:loc("LANGUAGE", "language_settings_config"), 148, -12)
+        love.graphics.print(Game:loc("language_settings_config"), 148, -12)
 
         local selection = getLanguageMenuSelection(self)
         local labels = {
-            Game:loc("Text Language", "text_language_config"),
-            Game:loc("Character Names", "name_language_config"),
-            Game:loc("Back", "back_config"),
+            Game:loc("text_language_config"),
+            Game:loc("name_language_config"),
+            Game:loc("back_config"),
         }
         local values = {
             Game:getLanguageName(),
@@ -246,25 +243,25 @@ function DarkConfigMenu:draw()
         Draw.setColor(1, 1, 1, 1)
 
     elseif self.state ~= "CONTROLS" then
-        local on, off = Game:loc("ON", "on"), Game:loc("OFF", "off")
-        love.graphics.print(Game:loc("CONFIG", "config"), 188, -12)
+        local on, off = Game:loc("on"), Game:loc("off")
+        love.graphics.print(Game:loc("config"), 188, -12)
 
         if self.state == "VOLUME" then
             Draw.setColor(PALETTE["world_text_selected"])
         end
-        love.graphics.print(Game:loc("Master Volume", "master_volume_config"), 88, 30 + (0 * 32))
+        love.graphics.print(Game:loc("master_volume_config"), 88, 30 + (0 * 32))
         Draw.setColor(PALETTE["world_text"])
-        love.graphics.print(Game:loc("Controls", "controls_config"), 88, 30 + (1 * 32))
-        love.graphics.print(Game:loc("Simplify VFX", "simp_vfx_config"), 88, 30 + (2 * 32))
-        love.graphics.print(Game:loc("Fullscreen", "fullscreen_config"), 88, 30 + (3 * 32))
-        love.graphics.print(Game:loc("Auto-Run", "auto_run_config"), 88, 30 + (4 * 32))
+        love.graphics.print(Game:loc("controls_config"), 88, 30 + (1 * 32))
+        love.graphics.print(Game:loc("simp_vfx_config"), 88, 30 + (2 * 32))
+        love.graphics.print(Game:loc("fullscreen_config"), 88, 30 + (3 * 32))
+        love.graphics.print(Game:loc("auto_run_config"), 88, 30 + (4 * 32))
         if self.state == "LANGUAGE" then
             Draw.setColor(PALETTE["world_text_selected"])
         end
-        love.graphics.print(Game:loc("Language", "lang_config"), 88, 30 + (5 * 32))
+        love.graphics.print(Game:loc("lang_config"), 88, 30 + (5 * 32))
         Draw.setColor(PALETTE["world_text"])
-        love.graphics.print(Game:loc("Return to Title", "back_title_config"), 88, 30 + (6 * 32))
-        love.graphics.print(Game:loc("Back", "back_config"), 88, 30 + (7 * 32))
+        love.graphics.print(Game:loc("back_title_config"), 88, 30 + (6 * 32))
+        love.graphics.print(Game:loc("back_config"), 88, 30 + (7 * 32))
 
         if self.state == "VOLUME" then
             Draw.setColor(PALETTE["world_text_selected"])
@@ -283,13 +280,13 @@ function DarkConfigMenu:draw()
     -- NOTE: This is forced to true if using a PlayStation in DELTARUNE... Kristal doesn't have a PlayStation port though.
         local dualshock = Input.getControllerType() == "ps4"
 
-        love.graphics.print(Game:loc("Function", "function_config"), 23, -12)
+        love.graphics.print(Game:loc("function_config"), 23, -12)
         -- Console accuracy for the Heck of it
         if not Kristal.isConsole() then
-            love.graphics.print(Game:loc("Key", "key_config"), 243, -12)
+            love.graphics.print(Game:loc("key_config"), 243, -12)
         end
         if Input.hasGamepad() then
-            love.graphics.print(Kristal.isConsole() and Game:loc("Button", "button_config") or Game:loc("Gamepad", "gamepad_config"), 353, -12)
+            love.graphics.print(Kristal.isConsole() and Game:loc("button_config") or Game:loc("gamepad_config"), 353, -12)
         end
 
         if not Game.hasXtraConfig then
@@ -350,9 +347,9 @@ function DarkConfigMenu:draw()
             end
 
             if dualshock then
-                love.graphics.print(Game:loc("Reset to default", "reset_default_config"), 23, -4 + (29 * 8))
+                love.graphics.print(Game:loc("reset_default_config"), 23, -4 + (29 * 8))
             else
-                love.graphics.print(Game:loc("Reset to default", "reset_default_config"), 23, -4 + (28 * 8) + 4)
+                love.graphics.print(Game:loc("reset_default_config"), 23, -4 + (28 * 8) + 4)
             end
 
             Draw.setColor(PALETTE["world_text"])
@@ -361,9 +358,9 @@ function DarkConfigMenu:draw()
             end
 
             if dualshock then
-                love.graphics.print(Game:loc("Finish", "finish_config"), 23, -4 + (29 * 9))
+                love.graphics.print(Game:loc("finish_config"), 23, -4 + (29 * 9))
             else
-                love.graphics.print(Game:loc("Finish", "finish_config"), 23, -4 + (28 * 9) + 4)
+                love.graphics.print(Game:loc("finish_config"), 23, -4 + (28 * 9) + 4)
             end
 
             Draw.setColor(Game:getSoulColor())
@@ -432,9 +429,9 @@ function DarkConfigMenu:draw()
             end
 
             if dualshock then
-                love.graphics.print(Game:loc("Reset to default", "reset_default_config"), 23, -4 + (29 * 8))
+                love.graphics.print(Game:loc("reset_default_config"), 23, -4 + (29 * 8))
             else
-                love.graphics.print(Game:loc("Reset to default", "reset_default_config"), 23, -4 + (28 * 8) + 4)
+                love.graphics.print(Game:loc("reset_default_config"), 23, -4 + (28 * 8) + 4)
             end
 
             Draw.setColor(PALETTE["world_text"])
@@ -443,9 +440,9 @@ function DarkConfigMenu:draw()
             end
 
             if dualshock then
-                love.graphics.print(Game:loc("Finish", "finish_config"), 23, -4 + (29 * 9))
+                love.graphics.print(Game:loc("finish_config"), 23, -4 + (29 * 9))
             else
-                love.graphics.print(Game:loc("Finish", "finish_config"), 23, -4 + (28 * 9) + 4)
+                love.graphics.print(Game:loc("finish_config"), 23, -4 + (28 * 9) + 4)
             end
 
             Draw.setColor(Game:getSoulColor())

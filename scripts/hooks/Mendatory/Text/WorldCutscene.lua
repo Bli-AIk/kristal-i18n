@@ -5,7 +5,7 @@ function WorldCutscene:text(text, portrait, actor, options)
 
     local id = options["id"] or options["loc_id"] or options["loc"]
     if id then
-        text = Game:loc(text, id, options["var"])
+        text = Game:loc(id, options["var"])
     elseif options["var"] then
         text = Game:concat(text, options["var"])
     end

@@ -40,7 +40,7 @@ function NPC:onInteract(player, dir)
             end
             for index, line in ipairs(text) do
                 local id_line = type(id) == "table" and id[index] or nil
-                cutscene:text(Game:loc(line, id_line))
+                cutscene:text(id_line and Game:loc(id_line) or Game:locText(line))
             end
         end):after(function()
             self:onTextEnd()

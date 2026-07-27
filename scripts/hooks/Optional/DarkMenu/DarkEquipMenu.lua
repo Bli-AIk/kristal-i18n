@@ -6,9 +6,9 @@ function DarkEquipMenu:drawStats()
     Draw.draw(self.stat_icons["attack"], -8, 124, 0, 2, 2)
     Draw.draw(self.stat_icons["defense"], -8, 151, 0, 2, 2)
     Draw.draw(self.stat_icons["magic"], -8, 178, 0, 2, 2)
-    love.graphics.print(Game:loc("Attack:", "attack_stat"), 18, 118)
-    love.graphics.print(Game:loc("Defense:", "defense_stat"), 18, 145)
-    love.graphics.print(Game:loc("Magic:", "magic_stat"), 18, 172)
+    love.graphics.print(Game:loc("attack_stat"), 18, 118)
+    love.graphics.print(Game:loc("defense_stat"), 18, 145)
+    love.graphics.print(Game:loc("magic_stat"), 18, 172)
     local stats, compare = self:getStatsPreview()
     self:drawStatPreview("attack", 148, 118, stats, compare, self:getCurrentItemType() == "weapons")
     self:drawStatPreview("defense", 148, 145, stats, compare, false)
@@ -43,7 +43,7 @@ function DarkEquipMenu:drawAbilityPreview(index, x, y, abilities, compare)
             Draw.setColor(0.25, 0.25, 0.25)
         end
     end
-    love.graphics.print(name or Game:loc("(No ability.)", "no_ability_stat"), x + 26, y - 6)
+    love.graphics.print(name or Game:loc("no_ability_stat"), x + 26, y - 6)
 end
 
 return DarkEquipMenu

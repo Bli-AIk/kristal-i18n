@@ -1,4 +1,4 @@
-local langLibZh = {}
+local kristalI18n = {}
 
 local DEFAULT_LANGUAGE = "en"
 local FALLBACK_LANGUAGE = "en"
@@ -7,8 +7,6 @@ local CJK_FIXED_TEXT_SPACING = 2
 local CJK_DIALOGUE_TEXT_SPACING = 4
 local CJK_DIALOGUE_Y_OFFSET = -1
 local CJK_TYPEWRITER_SPEED_MULTIPLIER = 1 --0.85
-local LEGACY_NAME_STYLE_TRANSLATED = "translated"
-local LEGACY_NAME_STYLE_ORIGINAL = "original"
 local DEFAULT_LANGUAGE_TOGGLE_KEY = "f7"
 
 local STATIC_TEXT_IDS = {
@@ -248,7 +246,7 @@ local CONSOLE_STARTUP_MESSAGES = {
 
 local function getConfig(key, merge, deep_merge)
     if Kristal and Kristal.getLibConfig then
-        local ok, value = pcall(Kristal.getLibConfig, "langLibZh", key, merge, deep_merge)
+        local ok, value = pcall(Kristal.getLibConfig, "kristalI18n", key, merge, deep_merge)
         if ok and value ~= nil then
             return value
         end
@@ -300,13 +298,7 @@ local function normalizeNameId(id)
 end
 
 local function normalizeNameLanguage(language, fallback_language)
-    language = normalizeLanguageId(language)
-    if language == LEGACY_NAME_STYLE_ORIGINAL or language == "raw" or language == "untranslated" then
-        return FALLBACK_LANGUAGE
-    elseif language == LEGACY_NAME_STYLE_TRANSLATED then
-        return normalizeLanguageId(fallback_language or (Game and Game.lang) or FALLBACK_LANGUAGE)
-    end
-    return language
+    return normalizeLanguageId(language or fallback_language or FALLBACK_LANGUAGE)
 end
 
 local ORIGINAL_TERM_REPLACEMENTS = {
@@ -566,16 +558,16 @@ local function localizeStaticText(text)
     local localized
     local id = STATIC_TEXT_IDS[text]
     if id then
-        localized = Game:loc(text, id)
+        localized = Game:loc(id)
     else
         local prefix, gameover_party_text = text:match("^(%[speed:0%.5%]%[spacing:%d+%]%[voice:[^%]]+%])(.*)$")
         id = gameover_party_text and GAMEOVER_PARTY_TEXT_IDS[gameover_party_text]
         if id then
-            localized = prefix .. Game:loc(gameover_party_text, id)
+            localized = prefix .. Game:loc(id)
         else
             local slot = text:match("^Overwrite Slot (%d+)%?$")
             if slot then
-                localized = Game:loc("Overwrite Slot [var:slot]?", "save_menu_overwrite_slot", { slot = slot })
+                localized = Game:loc("save_menu_overwrite_slot", { slot = slot })
             elseif localizeDebugPatternText then
                 localized = localizeDebugPatternText(text)
             end
@@ -592,12 +584,12 @@ end
 localizeDebugPatternText = function(text)
     local state = text:match("^State: (.+)$")
     if state then
-        return Game:loc("State: [var:state]", "debug_battle_state", { state = state })
+        return Game:loc("debug_battle_state", { state = state })
     end
 
     local substate = text:match("^Substate: (.+)$")
     if substate then
-        return Game:loc("Substate: [var:substate]", "debug_battle_substate", { substate = substate })
+        return Game:loc("debug_battle_substate", { substate = substate })
     end
 
     local desc, state = text:match("^(.*) %((ON)%)$")
@@ -605,73 +597,73 @@ localizeDebugPatternText = function(text)
         desc, state = text:match("^(.*) %((OFF)%)$")
     end
     if desc and state then
-        return Game:loc("[var:desc] ([var:state])", "debug_bool_suffix", {
+        return Game:loc("debug_bool_suffix", {
             desc = localizeStaticText(desc),
-            state = Game:loc(state, state == "ON" and "on" or "off")
+            state = Game:loc(state == "ON" and "on" or "off")
         })
     end
 
     local fps_text = text:match("^Set the target FPS%. %((.+)%)$")
     if fps_text then
-        return Game:loc("Set the target FPS. ([var:fps])", "debug_target_fps_current", {
+        return Game:loc("debug_target_fps_current", {
             fps = localizeStaticText(fps_text)
         })
     end
 
     local fps = text:match("^Set the target FPS to ([%d%.]+)%.$")
     if fps then
-        return Game:loc("Set the target FPS to [var:fps].", "debug_set_target_fps_value", { fps = fps })
+        return Game:loc("debug_set_target_fps_value", { fps = fps })
     end
 
     local speed = text:match("^Set the fast forward speed to (x[%d%.]+) multiplier%.$")
     if speed then
-        return Game:loc("Set the fast forward speed to [var:speed] multiplier.", "debug_set_fast_forward_speed", {
+        return Game:loc("debug_set_fast_forward_speed", {
             speed = speed
         })
     end
 
     local item_name = text:match("^(.*) %(Light Item%)$")
     if item_name then
-        return Game:loc("[var:name] (Light Item)", "debug_light_item_suffix", { name = item_name })
+        return Game:loc("debug_light_item_suffix", { name = item_name })
     end
 
     local wave_count = text:match("^Remove this wave from the selected group%. (%(.+%))$")
     if wave_count then
-        return Game:loc("Remove this wave from the selected group. [var:count]", "debug_remove_wave_from_group", {
+        return Game:loc("debug_remove_wave_from_group", {
             count = wave_count
         })
     end
 
     wave_count = text:match("^Add this wave to the selected group%. (%(.+%))$")
     if wave_count then
-        return Game:loc("Add this wave to the selected group. [var:count]", "debug_add_wave_to_group", {
+        return Game:loc("debug_add_wave_to_group", {
             count = wave_count
         })
     end
 
     local member = text:match("^Give Spell to (.+)$")
     if member then
-        return Game:loc("Give Spell to [var:member]", "debug_give_spell_to", { member = member })
+        return Game:loc("debug_give_spell_to", { member = member })
     end
 
     member = text:match("^Give this spell to (.+)%.$")
     if member then
-        return Game:loc("Give this spell to [var:member].", "debug_give_this_spell_to", { member = member })
+        return Game:loc("debug_give_this_spell_to", { member = member })
     end
 
     member = text:match("^Take this spell from (.+)%.$")
     if member then
-        return Game:loc("Take this spell from [var:member].", "debug_take_this_spell_from", { member = member })
+        return Game:loc("debug_take_this_spell_from", { member = member })
     end
 
     local border = text:match("^Switch to the border \"(.+)\"%.$")
     if border then
-        return Game:loc("Switch to the border \"[var:border]\".", "debug_switch_border", { border = border })
+        return Game:loc("debug_switch_border", { border = border })
     end
 
     local flag_type = text:match("^Shows only ([%w_]+) flags%.$")
     if flag_type then
-        return Game:loc("Shows only [var:type] flags.", "debug_show_only_flag_type", {
+        return Game:loc("debug_show_only_flag_type", {
             type = localizeDebugTypeName(flag_type)
         })
     end
@@ -679,22 +671,22 @@ localizeDebugPatternText = function(text)
     local filter_action = text:match("^Filters to (hide) flags whose names match to\nthe FILTER QUERY$")
         or text:match("^Filters to (show) flags whose names match to\nthe FILTER QUERY$")
     if filter_action then
-        return Game:loc("Filters to [var:action] flags whose names match to\nthe FILTER QUERY", "debug_filter_mode_match_description", {
-            action = Game:loc(filter_action, filter_action == "hide" and "debug_filter_action_hide" or "debug_filter_action_show")
+        return Game:loc("debug_filter_mode_match_description", {
+            action = Game:loc(filter_action == "hide" and "debug_filter_action_hide" or "debug_filter_action_show")
         })
     end
 
     filter_action = text:match("^Filters to (hide) flags whose names start with\nthe FILTER QUERY$")
         or text:match("^Filters to (show) flags whose names start with\nthe FILTER QUERY$")
     if filter_action then
-        return Game:loc("Filters to [var:action] flags whose names start with\nthe FILTER QUERY", "debug_filter_mode_starts_with_description", {
-            action = Game:loc(filter_action, filter_action == "hide" and "debug_filter_action_hide" or "debug_filter_action_show")
+        return Game:loc("debug_filter_mode_starts_with_description", {
+            action = Game:loc(filter_action == "hide" and "debug_filter_action_hide" or "debug_filter_action_show")
         })
     end
 
     local flag_kind, flag_name = text:match("^Edit Flag %(([%w_]+)%) %- \"(.+)\"$")
     if flag_kind and flag_name then
-        return Game:loc("Edit Flag ([var:type]) - \"[var:name]\"", "debug_edit_flag_title", {
+        return Game:loc("debug_edit_flag_title", {
             type = localizeDebugTypeName(flag_kind),
             name = flag_name
         })
@@ -702,27 +694,27 @@ localizeDebugPatternText = function(text)
 
     local selected = text:match("^Selected: (.+)$")
     if selected then
-        return Game:loc("Selected: [var:object]", "debug_selected_object", { object = selected })
+        return Game:loc("debug_selected_object", { object = selected })
     end
 
     local x, y = text:match("^Mouse: %((%-?%d+), (%-?%d+)%)$")
     if x and y then
-        return Game:loc("Mouse: ([var:x], [var:y])", "debug_mouse_position", { x = x, y = y })
+        return Game:loc("debug_mouse_position", { x = x, y = y })
     end
 
     x, y = text:match("^Position: %((%-?%d+), (%-?%d+)%)$")
     if x and y then
-        return Game:loc("Position: ([var:x], [var:y])", "debug_object_position", { x = x, y = y })
+        return Game:loc("debug_object_position", { x = x, y = y })
     end
 
     x, y = text:match("^Screen Pos: %((%-?%d+), (%-?%d+)%)$")
     if x and y then
-        return Game:loc("Screen Pos: ([var:x], [var:y])", "debug_object_screen_position", { x = x, y = y })
+        return Game:loc("debug_object_screen_position", { x = x, y = y })
     end
 
     local world_id = text:match("^World ID: (.+)$")
     if world_id then
-        return Game:loc("World ID: [var:id]", "debug_world_id", { id = world_id })
+        return Game:loc("debug_world_id", { id = world_id })
     end
 
     return nil
@@ -807,7 +799,7 @@ local function refreshConsoleStartupHistory()
 
     for _, message in ipairs(CONSOLE_STARTUP_MESSAGES) do
         if console.history[message.index] then
-            local parsed = parseConsoleHistoryLines(console, Game:loc(message.default, message.id))
+            local parsed = parseConsoleHistoryLines(console, Game:loc(message.id))
             console.history[message.index] = parsed[1] or { "" }
         end
     end
@@ -995,12 +987,6 @@ end
 
 local function getDefaultNameLanguage(available)
     local configured = getConfig("defaultNameLanguage")
-    if configured == nil then
-        local legacy_style = getConfig("defaultNameStyle")
-        if legacy_style ~= nil then
-            configured = legacy_style
-        end
-    end
     configured = configured or (Game and Game.lang) or FALLBACK_LANGUAGE
 
     return matchAvailableLanguage(normalizeNameLanguage(configured, Game and Game.lang), available)
@@ -1023,7 +1009,6 @@ local function ensureNameLanguageGlobals()
     Game.langNameLanguages = getNameLanguageList()
     local requested = Game.langNameLanguage
         or getConfig("defaultNameLanguage")
-        or getConfig("defaultNameStyle")
         or Game.lang
     Game.langNameLanguage = matchAvailableLanguage(
         normalizeNameLanguage(requested, Game.lang),
@@ -1107,8 +1092,8 @@ local function loadLangTable(lang)
     local merged = {}
     local bases = {}
 
-    if langLibZh.info and langLibZh.info.path then
-        table.insert(bases, langLibZh.info.path)
+    if kristalI18n.info and kristalI18n.info.path then
+        table.insert(bases, kristalI18n.info.path)
     end
     if Mod and Mod.info and Mod.info.path then
         table.insert(bases, Mod.info.path)
@@ -1164,7 +1149,7 @@ local function resolveName(id, default)
 
     return getNameFromTable(Game.langStr, id, primary_language, fallback_language)
         or getNameFromTable(Game.langBaseStr, id, primary_language, fallback_language)
-        or tostring(default or id)
+        or "[color:red]Name missing: " .. tostring(default or id) .. "[color:reset]"
 end
 
 local function replaceNameReferences(str)
@@ -1188,7 +1173,10 @@ local function localizeTextValue(value, id, var)
         return out
     end
 
-    return Game:loc(value, id, var)
+    if id then
+        return Game:loc(id, var)
+    end
+    return Game:locText(value, var)
 end
 
 local function refreshCachedFont(object)
@@ -1249,12 +1237,6 @@ local function getLocalizedTexturePaths(path)
         "lang/" .. lang .. "/" .. path,
     }
 
-    -- Keep loading v2.0 name-style assets while mods migrate to language layers.
-    if name_language == lang then
-        table.insert(paths, "lang/" .. lang .. "/translated/" .. path)
-    elseif name_language == FALLBACK_LANGUAGE then
-        table.insert(paths, "lang/" .. lang .. "/original/" .. path)
-    end
     return paths
 end
 
@@ -1296,8 +1278,7 @@ local function localizeMapName(map)
 
     local properties = (map.data and map.data.properties) or {}
     local name_key = properties.name_id or mapNameKey(map.id)
-    local default_name = properties.name or map.name or map.id
-    map.name = Game:loc(default_name, name_key)
+    map.name = Game:loc(name_key)
 end
 
 local function refreshMapName()
@@ -1333,7 +1314,7 @@ local function hookPowerStatLabels(party_member)
         love.graphics.print = function(text, ...)
             local key = POWER_STAT_LABELS[text]
             if key then
-                text = Game:loc(text, key)
+                text = Game:loc(key)
             end
             return original_print(text, ...)
         end
@@ -1357,7 +1338,7 @@ local function localizeVictoryText(text)
 
     local xp, money, currency = text:match("^%* You won!\n%* Got (.-) EXP and (.-) (.-)%.$")
     if xp then
-        return Game:loc("* You won!\n* Got [var:xp] EXP and [var:money] [var:currency].", "battle_victory_with_exp", {
+        return Game:loc("battle_victory_with_exp", {
             xp = xp,
             money = money,
             currency = currency,
@@ -1369,7 +1350,7 @@ local function localizeVictoryText(text)
         if stronger == "You" then
             stronger = "你"
         end
-        return Game:loc("* You won!\n* Got [var:money] [var:currency].\n* [var:stronger] became stronger.", "battle_victory_stronger", {
+        return Game:loc("battle_victory_stronger", {
             money = stronger_money,
             currency = stronger_currency,
             stronger = stronger,
@@ -1380,11 +1361,11 @@ local function localizeVictoryText(text)
 end
 
 local function hookFrameworkLocalization()
-    if langLibZh.framework_localization_hooked then
+    if kristalI18n.framework_localization_hooked then
         return
     end
 
-    langLibZh.framework_localization_hooked = true
+    kristalI18n.framework_localization_hooked = true
 
     HookSystem.hook(Item, "getBonusName", function(orig, item, ...)
         local bonus_name = orig(item, ...)
@@ -1393,7 +1374,7 @@ local function hookFrameworkLocalization()
         end
 
         local key = ITEM_BONUS_NAMES[bonus_name]
-        return key and Game:loc(bonus_name, key) or bonus_name
+        return key and Game:loc(key) or bonus_name
     end)
 
     HookSystem.hook(Battle, "battleText", function(orig, battle, text, ...)
@@ -1410,9 +1391,9 @@ local function hookFrameworkLocalization()
 
             for english_title, key in pairs(NOELLE_SPECIAL_TITLE_KEYS) do
                 if title:find(english_title, 1, true) then
-                    return Game:loc("LV[var:lv] [var:title]", "chara_getTitle", {
+                    return Game:loc("chara_getTitle", {
                         lv = self:getLevel(),
-                        title = Game:loc(title:gsub("^LV%d+ ", ""), key),
+                        title = Game:loc(key),
                     })
                 end
             end
@@ -1457,18 +1438,18 @@ local function applyItemLocalizationPatch(item)
                 return original_get_battle_text(self, user, target)
             end
             return {
-                Game:loc("* [var:charaName] used the [var:useName]!", "item_glowshard_battleText", {
+                Game:loc("item_glowshard_battleText", {
                     charaName = user.chara:getName(),
                     useName = self:getUseName()
                 }),
-                Game:loc("* But nothing happened...", "item_glowshard_battleNothing")
+                Game:loc("item_glowshard_battleNothing")
             }
         end
     elseif item.id == "cell_phone" then
         function item:onWorldUse()
             Game.world:startCutscene(function(cutscene)
                 Assets.playSound("phone", 0.7)
-                cutscene:text(Game:loc("* (You tried to call on the Cell\nPhone.)", "item_cell_phone_call_try"), nil, nil, {advance = false})
+                cutscene:text(Game:loc("item_cell_phone_call_try"), nil, nil, {advance = false})
                 cutscene:wait(40/30)
 
                 local was_playing = Game.world.music:isPlaying()
@@ -1484,17 +1465,17 @@ local function applyItemLocalizationPatch(item)
                 end
 
                 if Game.chapter == 1 then
-                    cutscene:text(Game:loc("* But it doesn't seem to be working.", "item_cell_phone_call_not_working"))
+                    cutscene:text(Game:loc("item_cell_phone_call_not_working"))
                 else
-                    cutscene:text(Game:loc("* It's nothing but garbage noise.", "item_cell_phone_call_garbage_noise"))
+                    cutscene:text(Game:loc("item_cell_phone_call_garbage_noise"))
                 end
             end)
         end
     elseif item.id == "shadowcrystal" then
         function item:getDescription()
-            local desc = Game:loc(self.description, "item_shadowcrystal_description")
+            local desc = Game:loc("item_shadowcrystal_description")
             if self:getCollected() > 0 then
-                desc = desc .. "\n" .. Game:loc("You have collected [var:count].", "item_shadowcrystal_collected", {
+                desc = desc .. "\n" .. Game:loc("item_shadowcrystal_collected", {
                     count = self:getCollected()
                 })
             end
@@ -1508,11 +1489,11 @@ local function applyItemLocalizationPatch(item)
                 self:setFlag("used_none", true)
 
                 Game.world:showText({
-                    Game:loc("* You held the crystal up to your\neye.", "item_shadowcrystal_use_1"),
-                    Game:loc("* ...[wait:5] but nothing happened.", "item_shadowcrystal_use_2")
+                    Game:loc("item_shadowcrystal_use_1"),
+                    Game:loc("item_shadowcrystal_use_2")
                 })
             else
-                Game.world:showText(Game:loc("* It doesn't seem very useful.", "item_shadowcrystal_use_again"))
+                Game.world:showText(Game:loc("item_shadowcrystal_use_again"))
             end
         end
     end
@@ -1523,11 +1504,11 @@ end
 local applySpellLocalizationPatch
 
 local function hookRegistryItemCreation()
-    if langLibZh.registry_item_creation_hooked then
+    if kristalI18n.registry_item_creation_hooked then
         return
     end
 
-    langLibZh.registry_item_creation_hooked = true
+    kristalI18n.registry_item_creation_hooked = true
 
     HookSystem.hook(Registry, "createItem", function(orig, id, ...)
         return applyItemLocalizationPatch(orig(id, ...))
@@ -1547,23 +1528,23 @@ applySpellLocalizationPatch = function(spell)
 
     if spell.id == "rude_buster" then
         function spell:getCastMessage(user, target)
-            return Game:loc("* [var:userName] used [var:castName]!", "spell_rude_buster_castMessage", {
+            return Game:loc("spell_rude_buster_castMessage", {
                 userName = user.chara:getName(),
                 castName = self:getCastName()
             })
         end
     elseif spell.id == "pacify" then
         function spell:getCastMessage(user, target)
-            local message = Game:loc("* [var:userName] cast [var:castName]!", "spell_castMessage", {
+            local message = Game:loc("spell_castMessage", {
                 userName = user.chara:getName(),
                 castName = self:getCastName()
             })
             if target.tired then
                 return message
             elseif target.mercy < 100 then
-                return message .. "\n[wait:0.25s]" .. Game:loc("* But the enemy wasn't [color:blue]TIRED[color:reset]...", "spell_pacify_not_tired_enemy")
+                return message .. "\n[wait:0.25s]" .. Game:loc("spell_pacify_not_tired_enemy")
             else
-                return message .. "\n[wait:0.25s]" .. Game:loc("* But the foe wasn't [color:blue]TIRED[color:reset]... try\n[color:yellow]SPARING[color:reset]!", "spell_pacify_not_tired_foe_spare")
+                return message .. "\n[wait:0.25s]" .. Game:loc("spell_pacify_not_tired_foe_spare")
             end
         end
     end
@@ -1571,13 +1552,13 @@ applySpellLocalizationPatch = function(spell)
     return spell
 end
 
-function langLibZh:init()
+function kristalI18n:init()
     ensureLanguageGlobals()
     hookRegistryItemCreation()
     hookFrameworkLocalization()
 end
 
-function langLibZh:onKeyPressed(key, is_repeat)
+function kristalI18n:onKeyPressed(key, is_repeat)
     local toggle_key = getConfig("languageToggleKey")
     if toggle_key == false then
         return
@@ -1592,7 +1573,7 @@ function langLibZh:onKeyPressed(key, is_repeat)
     if Game:setLanguage(next_language) then
         refreshMapName()
 
-        local message = Game:loc("* Language switched to [var:language].", "lang_language_switched", {
+        local message = Game:loc("lang_language_switched", {
             language = Game:getLanguageName()
         })
         print(message)
@@ -1605,7 +1586,7 @@ function langLibZh:onKeyPressed(key, is_repeat)
     end
 end
 
-function langLibZh:registerDebugOptions(debug_system)
+function kristalI18n:registerDebugOptions(debug_system)
     debug_system:registerOption(
         "engine_options",
         "Debug Mode Terminology",
@@ -1621,7 +1602,7 @@ function langLibZh:registerDebugOptions(debug_system)
     )
 end
 
-function langLibZh:postInit()
+function kristalI18n:postInit()
     ensureLanguageGlobals()
     Game:loadLang(Game.lang)
 
@@ -1820,7 +1801,9 @@ function langLibZh:postInit()
         if ids then
             local localized = {}
             for index, choice in ipairs(choices) do
-                localized[index] = Game:loc(choice, ids[index], options["var"])
+                localized[index] = ids[index]
+                    and Game:loc(ids[index], options["var"])
+                    or Game:locText(choice, options["var"])
             end
             choices = localized
         elseif options["var"] then
@@ -1835,7 +1818,9 @@ function langLibZh:postInit()
         if ids then
             local localized = {}
             for index, choice in ipairs(choices) do
-                localized[index] = Game:loc(choice, ids[index], options["var"])
+                localized[index] = ids[index]
+                    and Game:loc(ids[index], options["var"])
+                    or Game:locText(choice, options["var"])
             end
             choices = localized
         elseif options["var"] then
@@ -1849,7 +1834,7 @@ function langLibZh:postInit()
             if type(text) == "string" then
                 local item_name = text:match("^Really throw away the\n(.+)%?$")
                 if item_name then
-                    text = Game:loc("Really throw away the\n[var:itemName]?", "dark_item_toss_confirm", {
+                    text = Game:loc("dark_item_toss_confirm", {
                         itemName = item_name
                     })
                 end
@@ -1865,9 +1850,9 @@ function langLibZh:postInit()
 
         HookSystem.hook(DebugSystem, "appendBool", function(orig, self, desc, bool)
             if Game.lang == "zh_hans" then
-                return Game:loc("[var:desc] ([var:state])", "debug_bool_suffix", {
+                return Game:loc("debug_bool_suffix", {
                     desc = localizeStaticText(desc),
-                    state = Game:loc(bool and "ON" or "OFF", bool and "on" or "off")
+                    state = Game:loc(bool and "on" or "off")
                 })
             end
             return orig(self, desc, bool)
@@ -2057,36 +2042,23 @@ function langLibZh:postInit()
     refreshLocalizedAssets()
 end
 
-function langLibZh:load(data)
+function kristalI18n:load(data)
     ensureLanguageGlobals()
 
     Game.lang = resolveLanguageId(data.lang or Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
         or getDefaultLanguage(Game.langAvailable)
     Game.langSelected = data.langSelected or Game.langSelected or 1
-    local saved_name_language = data.langNameLanguage
-    if saved_name_language == nil then
-        local legacy_style = data.langNameStyle or data.nameStyle
-        if legacy_style == LEGACY_NAME_STYLE_ORIGINAL then
-            saved_name_language = FALLBACK_LANGUAGE
-        elseif legacy_style == LEGACY_NAME_STYLE_TRANSLATED then
-            saved_name_language = Game.lang
-        else
-            saved_name_language = legacy_style
-        end
-    end
-    Game.langNameLanguage = saved_name_language or Game.langNameLanguage
+    Game.langNameLanguage = data.langNameLanguage or Game.langNameLanguage
     Game.langDebugTermsTranslated = data.langDebugTermsTranslated ~= false
 
     Game:loadLang(Game.lang)
     return data
 end
 
-function langLibZh:save(data)
+function kristalI18n:save(data)
     data.lang = Game.lang
     data.langSelected = Game.langSelected
     data.langNameLanguage = Game.langNameLanguage
-    data.langNameStyle = nil
-    data.nameStyle = nil
     data.langDebugTermsTranslated = Game:getDebugTermsTranslated()
     return data
 end
@@ -2196,43 +2168,24 @@ function Game:getNameLanguageName(language)
     return getLanguageName(language)
 end
 
--- Compatibility for mods and saves written before name languages were introduced.
-function Game:setNameStyle(style, refresh_assets)
-    return Game:setNameLanguage(style, refresh_assets)
-end
-
-function Game:getNameStyle()
-    return Game:getNameLanguage()
-end
-
-function Game:getNameStyles()
-    return Game:getNameLanguages()
-end
-
-function Game:getNameStyleName(style)
-    return Game:getNameLanguageName(style)
-end
-
-function Game:loc(default, id, var)
-    local value = nil
-
-    if id then
-        if Game.langStr then
-            value = Game.langStr[id]
-        end
-        if value == nil and Game.langBaseStr then
-            value = Game.langBaseStr[id]
-        end
+function Game:loc(id, var)
+    if type(id) ~= "string" or id == "" then
+        error("Game:loc expects a non-empty localization id")
     end
 
+    local value = Game:locRaw(id)
     if value == nil then
-        value = default
-    end
-    if value == nil then
-        value = "---missing-string:" .. tostring(id or "nil") .. "---"
+        value = "[color:red]Localization missing: " .. id .. "[color:reset]"
     end
 
     return Game:concat(value, var)
+end
+
+function Game:locText(text, var)
+    if type(text) ~= "string" then
+        error("Game:locText expects a string")
+    end
+    return Game:concat(text, var)
 end
 
 function Game:locRaw(id)
@@ -2272,4 +2225,4 @@ function Game:concat(value, var)
     end))
 end
 
-return langLibZh
+return kristalI18n
