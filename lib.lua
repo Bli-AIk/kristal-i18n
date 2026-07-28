@@ -201,6 +201,9 @@ local STATIC_TEXT_IDS = {
     ["Return"] = "save_menu_return",
     ["Storage"] = "save_menu_storage",
     ["STORAGE"] = "storage_storage",
+    ["(Tired)"] = "battle_tired_comment",
+    ["MERCY"] = "battle_mercy_label",
+    ["NO SPACE"] = "shop_no_space",
     ["Recruits"] = "save_menu_recruits",
     ["File Saved"] = "save_menu_file_saved",
     ["File saved."] = "save_menu_file_saved_period",
@@ -577,16 +580,31 @@ local function localizeStaticText(text)
     if id then
         localized = Game:loc(id)
     else
-        local prefix, gameover_party_text = text:match("^(%[speed:0%.5%]%[spacing:%d+%]%[voice:[^%]]+%])(.*)$")
-        id = gameover_party_text and GAMEOVER_PARTY_TEXT_IDS[gameover_party_text]
-        if id then
-            localized = prefix .. Game:loc(id)
+        local space = text:match("^Space:(%d+)$")
+        if space then
+            localized = Game:loc("shop_space", { space = space })
         else
-            local slot = text:match("^Overwrite Slot (%d+)%?$")
-            if slot then
-                localized = Game:loc("save_menu_overwrite_slot", { slot = slot })
-            elseif localizeDebugPatternText then
-                localized = localizeDebugPatternText(text)
+            local held_space = text:match("^HELD SPACE: (%d+)$")
+            if held_space then
+                localized = Game:loc("shop_held_space", { space = held_space })
+            else
+                local storage_space = text:match("^STORAGE SPACE: (%d+)$")
+                if storage_space then
+                    localized = Game:loc("shop_storage_space", { space = storage_space })
+                else
+                    local prefix, gameover_party_text = text:match("^(%[speed:0%.5%]%[spacing:%d+%]%[voice:[^%]]+%])(.*)$")
+                    id = gameover_party_text and GAMEOVER_PARTY_TEXT_IDS[gameover_party_text]
+                    if id then
+                        localized = prefix .. Game:loc(id)
+                    else
+                        local slot = text:match("^Overwrite Slot (%d+)%?$")
+                        if slot then
+                            localized = Game:loc("save_menu_overwrite_slot", { slot = slot })
+                        elseif localizeDebugPatternText then
+                            localized = localizeDebugPatternText(text)
+                        end
+                    end
+                end
             end
         end
     end
@@ -1377,6 +1395,58 @@ local function localizeVictoryText(text)
     return text
 end
 
+local function localizeBattleText(text)
+    if Game:getLanguage() ~= "zh_hans" or type(text) ~= "string" then
+        return text
+    end
+
+    local battler_name, enemy_name = text:match("^%* (.-) spared (.-)!$")
+    if battler_name then
+        return Game:loc("battle_spare_success", {
+            battlerName = battler_name,
+            enemyName = enemy_name,
+        })
+    end
+
+    battler_name = text:match("^%* (.-) spared!$")
+    if battler_name then
+        return Game:loc("battle_spare_no_enemy", { battlerName = battler_name })
+    end
+
+    battler_name, enemy_name = text:match("^%* (.-) spared (.-)!\n%* But its name wasn't %[color:yellow%]YELLOW%[color:reset%]%.%.%.$")
+    if battler_name then
+        return Game:loc("battle_spare_not_yellow", {
+            battlerName = battler_name,
+            enemyName = enemy_name,
+        })
+    end
+
+    local party_name, spell_name = text:match("^%* %(Try using (.-)'s %[color:blue%](.-)%[color:reset%]!%)$")
+    if party_name then
+        return Game:loc("battle_spare_try_spell", {
+            partyName = party_name,
+            spellName = spell_name,
+        })
+    end
+
+    if text == "* (Try using [color:blue]ACTs[color:reset]!)" then
+        return Game:loc("battle_spare_try_act")
+    end
+
+    return text
+end
+
+local function localizeBattleTextValue(value)
+    if type(value) == "table" then
+        local out = {}
+        for key, item in pairs(value) do
+            out[key] = localizeBattleTextValue(item)
+        end
+        return out
+    end
+    return localizeBattleText(value)
+end
+
 local function hookFrameworkLocalization()
     if kristalI18n.framework_localization_hooked then
         return
@@ -1395,7 +1465,7 @@ local function hookFrameworkLocalization()
     end)
 
     HookSystem.hook(Battle, "battleText", function(orig, battle, text, ...)
-        return orig(battle, localizeVictoryText(text), ...)
+        return orig(battle, localizeBattleTextValue(localizeVictoryText(text)), ...)
     end)
 
     local noelle = Registry.getPartyMember("noelle")

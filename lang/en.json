@@ -319,6 +319,18 @@
     "frozen_enemy_text": "* (It's frozen solid...)",
     "battle_victory_with_exp": "* You won!\n* Got [var:xp] EXP and [var:money] [var:currency].",
     "battle_victory_stronger": "* You won!\n* Got [var:money] [var:currency].\n* [var:stronger] became stronger.",
+    "battle_spare_success": "* [var:battlerName] spared [var:enemyName]!",
+    "battle_spare_no_enemy": "* [var:battlerName] spared!",
+    "battle_spare_not_yellow": "* [var:battlerName] spared [var:enemyName]!\n* But its name wasn't [color:yellow]YELLOW[color:reset]...",
+    "battle_spare_try_spell": "* (Try using [var:partyName]'s [color:blue][var:spellName][color:reset]!)",
+    "battle_spare_try_act": "* (Try using [color:blue]ACTs[color:reset]!)",
+    "battle_tired_comment": "(Tired)",
+    "battle_mercy_label": "MERCY",
+
+    "shop_no_space": "NO SPACE",
+    "shop_space": "Space:[var:space]",
+    "shop_held_space": "HELD SPACE: [var:space]",
+    "shop_storage_space": "STORAGE SPACE: [var:space]",
 
     "guts_stat": "Guts:",
     "rudeness_stat": "Rudeness",

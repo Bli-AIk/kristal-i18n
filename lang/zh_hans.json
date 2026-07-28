@@ -319,6 +319,18 @@
     "frozen_enemy_text": "* （冻得很结实...）",
     "battle_victory_with_exp": "* 你胜利了！\n* 获得了[var:xp]EXP和[var:money][var:currency]。",
     "battle_victory_stronger": "* 你胜利了！\n* 获得了[var:money][var:currency]。\n* [var:stronger]变得更强了。",
+    "battle_spare_success": "* [var:battlerName]饶恕了[var:enemyName]！",
+    "battle_spare_no_enemy": "* [var:battlerName]被饶恕了！",
+    "battle_spare_not_yellow": "* [var:battlerName]饶恕了[var:enemyName]！\n* 但它的名字还不是[color:yellow]黄色[color:reset]的...",
+    "battle_spare_try_spell": "* （试着让[var:partyName]使用[color:blue][var:spellName][color:reset]吧！）",
+    "battle_spare_try_act": "* （试着使用[color:blue]行动[color:reset]吧！）",
+    "battle_tired_comment": "（疲惫）",
+    "battle_mercy_label": "仁慈",
+
+    "shop_no_space": "已满",
+    "shop_space": "空间:[var:space]",
+    "shop_held_space": "随身物品空间：[var:space]",
+    "shop_storage_space": "库存空间：[var:space]",
 
     "guts_stat": "胆量：",
     "rudeness_stat": "粗鲁度  ",
