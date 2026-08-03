@@ -210,6 +210,15 @@ local STATIC_TEXT_IDS = {
     ["New File"] = "save_menu_new_file",
     ["Return to Title"] = "save_menu_return_to_title",
     ["Really return to title?"] = "save_menu_really_return_to_title",
+    ["* You re-applied the bandage."] = "item_light/bandage_use",
+    ["* You looked at the junk ball in\nadmiration.[wait:5]\n* Nothing happened."] = "item_light/ball_of_junk_use",
+    ["* You really didn't want to throw\nit away."] = "item_light/ball_of_junk_toss_chapter_1",
+    ["* You took it from your pocket.[wait:5]\n* You have a [color:yellow]very,[wait:5] very,[wait:5] bad\nfeeling[color:reset] about throwing it away."] = "item_light/ball_of_junk_toss_intro",
+    ["* Throw it away anyway?"] = "item_light/ball_of_junk_toss_confirm",
+    ["* Hand shaking,[wait:5] you dropped the\nball of junk on the ground."] = "item_light/ball_of_junk_toss_drop",
+    ["* It broke into pieces."] = "item_light/ball_of_junk_toss_broken",
+    ["* You felt bitter."] = "item_light/ball_of_junk_toss_bitter",
+    ["* You felt a feeling of relief."] = "item_light/ball_of_junk_toss_relief",
     ["Yes"] = "yes",
     ["No"] = "no",
     ["YES"] = "yes",
@@ -764,6 +773,97 @@ local function localizeStaticTextValue(value)
         return out
     end
     return localizeStaticText(value)
+end
+
+local LIGHT_MENU_STATIC_TEXT_IDS = {
+    ["ITEM"] = "light_menu_item",
+    ["STAT"] = "light_menu_stat",
+    ["CELL"] = "light_menu_cell",
+    ["USE"] = "light_item_use",
+    ["INFO"] = "light_item_info",
+    ["DROP"] = "light_item_drop",
+}
+
+local function escapeLuaPattern(value)
+    return (tostring(value):gsub("([^%w])", "%%%1"))
+end
+
+local function localizeLightMenuText(text)
+    if type(text) ~= "string" or Game.lang ~= "zh_hans" then
+        return text
+    end
+
+    local id = LIGHT_MENU_STATIC_TEXT_IDS[text]
+    if id then
+        return Game:loc(id)
+    end
+
+    local value = text:match("^AT  (.+)$")
+    if value then
+        return Game:loc("light_stat_attack", { value = value })
+    end
+
+    value = text:match("^DF  (.+)$")
+    if value then
+        return Game:loc("light_stat_defense", { value = value })
+    end
+
+    value = text:match("^EXP: (.+)$")
+    if value then
+        return Game:loc("light_stat_exp", { value = value })
+    end
+
+    value = text:match("^NEXT: (.+)$")
+    if value then
+        return Game:loc("light_stat_next", { value = value })
+    end
+
+    value = text:match("^WEAPON: (.+)$")
+    if value then
+        value = value == "None" and Game:loc("light_none") or value
+        return Game:loc("light_stat_weapon", { value = value })
+    end
+
+    value = text:match("^ARMOR: (.+)$")
+    if value then
+        value = value == "None" and Game:loc("light_none") or value
+        return Game:loc("light_stat_armor", { value = value })
+    end
+
+    local currency = tostring(Game:getConfig("lightCurrency") or ""):upper()
+    if currency ~= "" then
+        value = text:match("^" .. escapeLuaPattern(currency) .. ": (.+)$")
+        if value then
+            return Game:loc("light_stat_money", { value = value })
+        end
+    end
+
+    return text
+end
+
+local function hookLightMenuDraw(menu_class)
+    if not menu_class then
+        return
+    end
+
+    HookSystem.hook(menu_class, "draw", function(orig, self, ...)
+        local original_print = love.graphics.print
+        love.graphics.print = function(text, ...)
+            return original_print(localizeLightMenuText(text), ...)
+        end
+
+        local draw_args = {...}
+        local unpack_args = table.unpack or unpack
+        local ok, result = xpcall(function()
+            return orig(self, unpack_args(draw_args))
+        end, debug.traceback)
+        love.graphics.print = original_print
+
+        if not ok then
+            error(result)
+        end
+        return result
+    end)
 end
 
 local function localizeDynamicStaticTextValue(value)
@@ -1464,6 +1564,16 @@ local function hookFrameworkLocalization()
         return key and Game:loc(key) or bonus_name
     end)
 
+    if LightEquipItem then
+        HookSystem.hook(LightEquipItem, "showEquipText", function(orig, item, ...)
+            if Game:getLanguage() ~= "zh_hans" then
+                return orig(item, ...)
+            end
+
+            Game.world:showText(Game:loc("item_equip", {name = item:getName()}))
+        end)
+    end
+
     HookSystem.hook(Battle, "battleText", function(orig, battle, text, ...)
         return orig(battle, localizeBattleTextValue(localizeVictoryText(text)), ...)
     end)
@@ -1582,6 +1692,45 @@ local function applyItemLocalizationPatch(item)
             else
                 Game.world:showText(Game:loc("item_shadowcrystal_use_again"))
             end
+        end
+    elseif item.id == "light/glass" then
+        function item:onWorldUse()
+            if Kristal.callEvent("onShadowCrystal", self, true) then
+                return
+            elseif not self:getFlag("used_lw_no_party") and #Game.party == 1 and #Game.temp_followers == 0 then
+                self:setFlag("used_lw_no_party", true)
+
+                Game.world:showText({
+                    Game:loc("item_light/glass_use_alone_1"),
+                    Game:loc("item_light/glass_use_alone_2"),
+                    Game:loc("item_light/glass_use_alone_3"),
+                })
+            elseif not self:getFlag("used_none") then
+                self:setFlag("used_none", true)
+
+                Game.world:showText({
+                    Game:loc("item_light/glass_use_1"),
+                    Game:loc("item_light/glass_use_2"),
+                })
+            else
+                Game.world:showText(Game:loc("item_light/glass_use_again"))
+            end
+            return false
+        end
+
+        function item:onCheck()
+            Game.world:showText({
+                Game:loc("item_light/glass_check_1"),
+                Game:loc("item_light/glass_check_2"),
+            })
+        end
+
+        function item:onToss()
+            Game.world:showText({
+                Game:loc("item_light/glass_toss_1"),
+                Game:loc("item_light/glass_toss_2"),
+            })
+            return false
         end
     end
 
@@ -1808,6 +1957,11 @@ function kristalI18n:postInit()
     HookSystem.hook(love.graphics, "printf", function(orig, text, ...)
         return printfCjkTextWithSpacing(graphics_print, orig, text, ...)
     end)
+
+    hookLightMenuDraw(LightMenu)
+    hookLightMenuDraw(LightStatMenu)
+    hookLightMenuDraw(LightItemMenu)
+    hookLightMenuDraw(LightCellMenu)
 
     if GonerChoice then
         HookSystem.hook(GonerChoice, "getChoiceText", function(orig, self, choice, x, y)
