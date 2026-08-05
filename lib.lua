@@ -8,6 +8,7 @@ local CJK_DIALOGUE_TEXT_SPACING = 4
 local CJK_DIALOGUE_Y_OFFSET = -1
 local CJK_TYPEWRITER_SPEED_MULTIPLIER = 1 --0.85
 local DEFAULT_LANGUAGE_TOGGLE_KEY = "f7"
+local ID_INTERP_PATTERN = "%{([%w_./]*[a-zA-Z][%w_./]*)%}"
 
 local STATIC_TEXT_IDS = {
     ["~ KRISTAL DEBUG ~"] = "debug_menu_title",
@@ -549,6 +550,10 @@ end
 
 local function addCjkTextSpacingValue(value, spacing_value, offset_y)
     if type(value) == "table" then
+        if type(isClass) == "function" and isClass(value) then
+            return value
+        end
+
         local out = {}
         for key, item in pairs(value) do
             out[key] = addCjkTextSpacingValue(item, spacing_value, offset_y)
@@ -573,6 +578,49 @@ local function setBattleSpeechDialogueFont(dialogue)
 
     dialogue.font = Game.lang == "zh_hans" and "zh_plain" or "plain"
     return true
+end
+
+local localizeTextValue
+local resolveTextInput
+
+local function getTextId(value)
+    if type(value) ~= "table" then
+        return nil
+    end
+
+    if value.id ~= nil then
+        return value.id
+    end
+    if value.loc_id ~= nil then
+        return value.loc_id
+    end
+    return value.loc
+end
+
+local function isClassInstance(value)
+    return type(value) == "table" and type(isClass) == "function" and isClass(value)
+end
+
+local function isColorTable(value)
+    if type(value) ~= "table" or type(value[1]) ~= "number" then
+        return false
+    end
+
+    for index = 2, 4 do
+        if value[index] ~= nil and type(value[index]) ~= "number" then
+            return false
+        end
+    end
+
+    return value[5] == nil
+end
+
+local function isTextDescriptor(value)
+    if type(value) ~= "table" or isClassInstance(value) or isColorTable(value) then
+        return false
+    end
+
+    return getTextId(value) ~= nil or (value.text ~= nil and value[1] == nil)
 end
 
 local localizeDebugPatternText
@@ -764,6 +812,14 @@ end
 
 local function localizeStaticTextValue(value)
     if type(value) == "table" then
+        if isClassInstance(value) or isColorTable(value) then
+            return value
+        end
+
+        if isTextDescriptor(value) then
+            return localizeStaticTextValue(resolveTextInput(value))
+        end
+
         local out = {}
         for key, item in pairs(value) do
             out[key] = localizeStaticTextValue(item)
@@ -787,6 +843,10 @@ local function escapeLuaPattern(value)
 end
 
 local function localizeLightMenuText(text)
+    if isTextDescriptor(text) then
+        text = resolveTextInput(text)
+    end
+
     if type(text) ~= "string" or Game.lang ~= "zh_hans" then
         return text
     end
@@ -867,11 +927,11 @@ end
 local function localizeDynamicStaticTextValue(value)
     if type(value) == "function" then
         return function(...)
-            return localizeStaticText(value(...))
+            return localizeStaticTextValue(resolveTextInput(value(...)))
         end
-    elseif type(value) == "string" then
+    elseif value ~= nil then
         return function()
-            return localizeStaticText(value)
+            return localizeStaticTextValue(resolveTextInput(value))
         end
     end
     return value
@@ -976,7 +1036,7 @@ local function getPrintedTextWidth(font, text)
 end
 
 local function printCjkTextWithSpacing(orig, text, x, y, r, sx, sy, ox, oy, kx, ky)
-    text = localizeStaticText(text)
+    text = localizeStaticTextValue(resolveTextInput(text))
 
     if not shouldPrintWithCjkSpacing(text) then
         return orig(text, x, y, r, sx, sy, ox, oy, kx, ky)
@@ -1015,7 +1075,7 @@ local function printCjkTextWithSpacing(orig, text, x, y, r, sx, sy, ox, oy, kx, 
 end
 
 local function printfCjkTextWithSpacing(print_orig, printf_orig, text, x, y, limit, align, r, sx, sy, ox, oy, kx, ky)
-    text = localizeStaticText(text)
+    text = localizeStaticTextValue(resolveTextInput(text))
 
     if not shouldPrintWithCjkSpacing(text) or text:find("\n", 1, true) then
         return printf_orig(text, x, y, limit, align, r, sx, sy, ox, oy, kx, ky)
@@ -1291,25 +1351,231 @@ local function replaceNameReferences(str)
     end))
 end
 
-local function localizeTextValue(value, id, var)
-    if type(value) == "table" then
+local function resolveIdInterpolation(text, var)
+    if type(text) ~= "string" or not text:find("{", 1, true) then
+        return text
+    end
+    return (text:gsub(ID_INTERP_PATTERN, function(id)
+        return Game:loc(id, var)
+    end))
+end
+
+localizeTextValue = function(value, id, var)
+    if isClassInstance(value) or isColorTable(value) then
+        return value
+    end
+
+    if isTextDescriptor(value) then
+        local descriptor_id = getTextId(value)
+        if descriptor_id ~= nil then
+            id = descriptor_id
+        end
+        local descriptor_options = value.options or {}
+        if descriptor_options.var ~= nil then
+            var = descriptor_options.var
+        elseif value.var ~= nil then
+            var = value.var
+        end
+        value = value.text
+    end
+
+    if type(id) == "table" then
         local out = {}
-        for key, item in pairs(value) do
-            local child_id = nil
-            if type(id) == "table" then
-                child_id = id[key]
-            elseif type(id) == "string" then
-                child_id = id .. "." .. tostring(key)
+        if type(value) == "table" then
+            for key, item in pairs(value) do
+                out[key] = localizeTextValue(item, id[key], var)
             end
-            out[key] = localizeTextValue(item, child_id, var)
+        else
+            for key, child_id in pairs(id) do
+                out[key] = localizeTextValue(nil, child_id, var)
+            end
         end
         return out
     end
 
-    if id then
+    -- A single ID describes the complete value, including a list of lines.
+    -- Do not derive child IDs or inspect the fallback value when it exists.
+    if id ~= nil then
         return Game:loc(id, var)
     end
+
+    if type(value) == "table" then
+        local out = {}
+        for key, item in pairs(value) do
+            out[key] = localizeTextValue(item, nil, var)
+        end
+        return out
+    end
+
+    if value == nil then
+        return ""
+    end
     return Game:locText(value, var)
+end
+
+local function mergeTextOptions(base, override)
+    local result = tableCopy(base)
+    for key, value in pairs(override or {}) do
+        result[key] = value
+    end
+    return result
+end
+
+local function extractTextDescriptor(value, options)
+    if not isTextDescriptor(value) then
+        return value, options or {}
+    end
+
+    local descriptor_options = tableCopy(options)
+    for key, item in pairs(value.options or {}) do
+        descriptor_options[key] = item
+    end
+    for key, item in pairs(value) do
+        if key ~= "text" and key ~= "options" and type(key) ~= "number"
+            and key ~= "choices" and key ~= "ids" and key ~= "loc_ids"
+        then
+            descriptor_options[key] = item
+        end
+    end
+
+    -- These fields belong to a text-choice descriptor and are consumed by
+    -- normalizeTextChoiceArgs rather than being passed to the textbox.
+    if value.ids ~= nil then
+        descriptor_options.ids = value.ids
+    elseif value.loc_ids ~= nil then
+        descriptor_options.loc_ids = value.loc_ids
+    end
+    return value.text, descriptor_options
+end
+
+local function stripTextOptions(options)
+    local result = {}
+    for key, value in pairs(options or {}) do
+        if key ~= "id" and key ~= "loc_id" and key ~= "loc"
+            and key ~= "ids" and key ~= "loc_ids" and key ~= "var"
+        then
+            result[key] = value
+        end
+    end
+    return result
+end
+
+resolveTextInput = function(value, options)
+    value, options = extractTextDescriptor(value, options)
+
+    if isClassInstance(value) or isColorTable(value) then
+        return value, stripTextOptions(options)
+    end
+
+    local id = getTextId(options)
+    if id ~= nil then
+        value = localizeTextValue(value, id, options.var)
+    elseif type(value) == "table" or options.var ~= nil then
+        value = localizeTextValue(value, nil, options.var)
+    elseif value == nil then
+        value = ""
+    end
+
+    if type(value) == "string" then
+        value = resolveIdInterpolation(value, options.var)
+    end
+
+    return value, stripTextOptions(options)
+end
+
+local function normalizeCutsceneTextArgs(text, portrait, actor, options)
+    if type(actor) == "table" and not isClassInstance(actor) then
+        options = mergeTextOptions(actor, options)
+        actor = nil
+    end
+    if type(portrait) == "table" and not isClassInstance(portrait) then
+        options = mergeTextOptions(portrait, options)
+        portrait = nil
+    end
+
+    text, options = resolveTextInput(text, options)
+    return text, portrait, actor, options
+end
+
+local function getListLength(value)
+    local length = 0
+    for key in pairs(value or {}) do
+        if type(key) == "number" and key > length then
+            length = key
+        end
+    end
+    return length
+end
+
+local function normalizeChoices(choices, options)
+    options = options or {}
+
+    if type(choices) == "table" and (choices.choices ~= nil
+        or choices.ids ~= nil or choices.loc_ids ~= nil)
+    then
+        local descriptor_options = {}
+        for key, value in pairs(choices) do
+            if key ~= "choices" and key ~= "ids" and key ~= "loc_ids"
+                and type(key) ~= "number"
+            then
+                descriptor_options[key] = value
+            end
+        end
+        descriptor_options.ids = choices.ids or choices.loc_ids
+        options = mergeTextOptions(descriptor_options, options)
+        choices = choices.choices
+    elseif isTextDescriptor(choices) then
+        choices = { choices }
+    end
+
+    if type(choices) ~= "table" then
+        choices = choices == nil and {} or { choices }
+    end
+
+    local ids = options.ids or options.loc_ids
+    if type(ids) == "string" then
+        ids = { ids }
+    end
+
+    local count = math.max(getListLength(choices), getListLength(ids))
+    local localized = {}
+    for index = 1, count do
+        local id = ids and ids[index]
+        if id ~= nil then
+            if isTextDescriptor(id) then
+                localized[index] = resolveTextInput(id, { var = options.var })
+            else
+                localized[index] = Game:loc(id, options.var)
+            end
+        elseif choices[index] ~= nil then
+            localized[index] = resolveTextInput(choices[index], { var = options.var })
+        end
+    end
+
+    return localized, stripTextOptions(options)
+end
+
+local function normalizeTextChoiceArgs(text, choices, portrait, actor, options)
+    if type(actor) == "table" and not isClassInstance(actor) then
+        options = mergeTextOptions(actor, options)
+        actor = nil
+    end
+    if type(portrait) == "table" and not isClassInstance(portrait) then
+        options = mergeTextOptions(portrait, options)
+        portrait = nil
+    end
+
+    local descriptor_choices
+    if type(text) == "table" and choices == nil then
+        descriptor_choices = text.choices
+    end
+
+    local text_options
+    text, text_options = extractTextDescriptor(text, options)
+    choices = choices or descriptor_choices or {}
+    local localized_text = resolveTextInput(text, text_options)
+    local localized_choices, clean_options = normalizeChoices(choices, text_options)
+    return localized_text, localized_choices, portrait, actor, clean_options
 end
 
 local function refreshCachedFont(object)
@@ -1536,6 +1802,10 @@ end
 
 local function localizeBattleTextValue(value)
     if type(value) == "table" then
+        if isClassInstance(value) or isColorTable(value) then
+            return value
+        end
+
         local out = {}
         for key, item in pairs(value) do
             out[key] = localizeBattleTextValue(item)
@@ -1543,6 +1813,161 @@ local function localizeBattleTextValue(value)
         return out
     end
     return localizeBattleText(value)
+end
+
+local function resolveDisplayText(value, options)
+    if value == nil then
+        return nil
+    end
+    return localizeStaticTextValue(resolveTextInput(value, options))
+end
+
+local function resolveTextLines(value)
+    value = resolveDisplayText(value)
+    if type(value) ~= "table" then
+        return { value }
+    end
+    return value
+end
+
+local function resolveTextList(value)
+    if value == nil then
+        return nil
+    end
+    if type(value) ~= "table" or isTextDescriptor(value) then
+        return resolveDisplayText(value)
+    end
+
+    local out = {}
+    for key, item in pairs(value) do
+        out[key] = resolveDisplayText(item)
+    end
+    return out
+end
+
+local function resolveFileData(data)
+    if type(data) ~= "table" or isClassInstance(data) then
+        return data
+    end
+
+    local result = tableCopy(data)
+    result.name = resolveDisplayText(data.name)
+    result.room_name = resolveDisplayText(data.room_name)
+    return result
+end
+
+local function resolveListMenuValues(list)
+    if isTextDescriptor(list) then
+        return { resolveDisplayText(list) }
+    end
+    if type(list) ~= "table" or isClassInstance(list) or isColorTable(list) then
+        return list
+    end
+
+    local result = {}
+    for key, value in pairs(list) do
+        result[key] = type(key) == "number" and resolveDisplayText(value) or value
+    end
+    return result
+end
+
+local function resolveShopItemOptions(options)
+    if type(options) ~= "table" or isClassInstance(options) then
+        return options
+    end
+
+    local result = tableCopy(options)
+    result.name = resolveDisplayText(options.name)
+    result.description = resolveDisplayText(options.description)
+    return result
+end
+
+local function resolveGonerChoice(choice)
+    if isTextDescriptor(choice) then
+        return { resolveDisplayText(choice), 0, 0 }
+    end
+    if type(choice) ~= "table" or isClassInstance(choice) then
+        return choice
+    end
+
+    local result = tableCopy(choice)
+    result[1] = resolveDisplayText(choice[1])
+    return result
+end
+
+local function resolveGonerChoices(choices)
+    if type(choices) ~= "table" or isClassInstance(choices) then
+        return choices
+    end
+
+    local result = {}
+    for y, row in ipairs(choices) do
+        if type(row) == "table" and not isClassInstance(row) then
+            result[y] = {}
+            for x, choice in ipairs(row) do
+                result[y][x] = resolveGonerChoice(choice)
+            end
+        else
+            result[y] = row
+        end
+    end
+    return result
+end
+
+local function resolveConsoleLines(text)
+    if isTextDescriptor(text) then
+        local resolved = resolveDisplayText(text)
+        return type(resolved) == "table" and resolved or { resolved }
+    end
+    if type(text) ~= "table" or isClassInstance(text) then
+        return text
+    end
+
+    local result = {}
+    for index, line in ipairs(text) do
+        if isColorTable(line) then
+            result[index] = line
+        else
+            result[index] = resolveDisplayText(line)
+        end
+    end
+    return result
+end
+
+local function resolveFileNamerOptions(options)
+    if type(options) ~= "table" or isClassInstance(options) then
+        return options
+    end
+
+    local result = tableCopy(options)
+    local mod = options.mod
+    if type(mod) == "table" and not isClassInstance(mod) then
+        result.mod = tableCopy(mod)
+    end
+
+    local name_text = options.name_text
+    if name_text == nil and result.mod then
+        name_text = result.mod.nameText
+    end
+    if name_text ~= nil then
+        result.name_text = resolveDisplayText(name_text)
+    end
+
+    local confirm_text = options.confirm_text
+    if confirm_text == nil and result.mod then
+        confirm_text = result.mod.confirmText
+    end
+    if confirm_text ~= nil then
+        result.confirm_text = resolveDisplayText(confirm_text)
+    end
+
+    return result
+end
+
+local function hookMethod(target, name, hook)
+    if target and type(target[name]) == "function" then
+        HookSystem.hook(target, name, hook)
+    end
 end
 
 local function hookFrameworkLocalization()
@@ -1573,8 +1998,49 @@ local function hookFrameworkLocalization()
     end
 
     HookSystem.hook(Battle, "battleText", function(orig, battle, text, ...)
+        text = resolveDisplayText(text)
         return orig(battle, localizeBattleTextValue(localizeVictoryText(text)), ...)
     end)
+
+    HookSystem.hook(Battle, "shortActText", function(orig, battle, text)
+        return orig(battle, resolveTextLines(text))
+    end)
+
+    HookSystem.hook(Battle, "infoText", function(orig, battle, text)
+        return orig(battle, resolveDisplayText(text))
+    end)
+
+    HookSystem.hook(Battle, "setEncounterText", function(orig, battle, options, instant)
+        options = tableCopy(options or {})
+        options.text, options = resolveTextInput(options.text, options)
+        options.text = localizeStaticTextValue(options.text)
+        return orig(battle, options, instant)
+    end)
+
+    hookMethod(Battle, "registerXAction", function(orig, battle, party, name, description, tp)
+        return orig(
+            battle,
+            party,
+            resolveDisplayText(name),
+            resolveDisplayText(description),
+            tp
+        )
+    end)
+
+    if EnemyBattler then
+        hookMethod(EnemyBattler, "registerAct", function(orig, battler, name, description, ...)
+            return orig(battler, resolveDisplayText(name), resolveDisplayText(description), ...)
+        end)
+        hookMethod(EnemyBattler, "registerShortAct", function(orig, battler, name, description, ...)
+            return orig(battler, resolveDisplayText(name), resolveDisplayText(description), ...)
+        end)
+        hookMethod(EnemyBattler, "registerActFor", function(orig, battler, char, name, description, ...)
+            return orig(battler, char, resolveDisplayText(name), resolveDisplayText(description), ...)
+        end)
+        hookMethod(EnemyBattler, "registerShortActFor", function(orig, battler, char, name, description, ...)
+            return orig(battler, char, resolveDisplayText(name), resolveDisplayText(description), ...)
+        end)
+    end
 
     local noelle = Registry.getPartyMember("noelle")
     if noelle then
@@ -1603,18 +2069,133 @@ local function hookFrameworkLocalization()
     if Interactable then
         HookSystem.hook(Interactable, "onInteract", function(orig, self, ...)
             if type(self.text) == "table" and self.text[1] == "* (It's frozen solid...)" then
-                self.text_id = self.text_id or {}
-                self.text_id[1] = "frozen_enemy_text"
+                self.text[1] = "{frozen_enemy_text}"
             end
             return orig(self, ...)
         end)
     end
 
     if World then
+        hookMethod(World, "heal", function(orig, self, target, amount, text)
+            return orig(self, target, amount, resolveDisplayText(text))
+        end)
+
+        hookMethod(World, "registerCall", function(orig, self, name, scene)
+            return orig(self, resolveDisplayText(name), scene)
+        end)
+
+        hookMethod(World, "replaceCall", function(orig, self, name, index, scene)
+            return orig(self, resolveDisplayText(name), index, scene)
+        end)
+
         HookSystem.hook(World, "setupMap", function(orig, self, ...)
             local result = orig(self, ...)
             localizeMapName(self.map)
             return result
+        end)
+
+        HookSystem.hook(World, "showText", function(orig, self, text, after)
+            if isTextDescriptor(text) then
+                text = { text }
+            end
+            return orig(self, text, after)
+        end)
+
+        HookSystem.hook(World, "partyReact", function(orig, self, party_member, text, display_time)
+            return orig(self, party_member, resolveDisplayText(text), display_time)
+        end)
+    end
+
+    if Battler then
+        HookSystem.hook(Battler, "spawnSpeechBubble", function(orig, self, text, options)
+            text, options = resolveTextInput(text, options)
+            return orig(self, localizeStaticTextValue(text), options)
+        end)
+    end
+
+    if SpeechBubble then
+        HookSystem.hook(SpeechBubble, "init", function(orig, self, text, x, y, options, speaker)
+            text, options = resolveTextInput(text, options)
+            return orig(self, localizeStaticTextValue(text), x, y, options, speaker)
+        end)
+
+        HookSystem.hook(SpeechBubble, "setText", function(orig, self, text, callback, line_callback)
+            text = resolveTextInput(text)
+            return orig(self, localizeStaticTextValue(text), callback, line_callback)
+        end)
+    end
+
+    if Textbox then
+        HookSystem.hook(Textbox, "setText", function(orig, self, text, callback)
+            text = resolveTextInput(text)
+            return orig(self, localizeStaticTextValue(text), callback)
+        end)
+
+        HookSystem.hook(Textbox, "addReaction", function(orig, self, id, text, x, y, face, actor)
+            return orig(self, id, resolveDisplayText(text), x, y, face, actor)
+        end)
+    end
+
+    if Choicebox then
+        HookSystem.hook(Choicebox, "addChoice", function(orig, self, name)
+            name = resolveTextInput(name)
+            return orig(self, localizeStaticTextValue(name))
+        end)
+    end
+
+    if TextChoicebox then
+        HookSystem.hook(TextChoicebox, "addChoice", function(orig, self, name)
+            name = resolveTextInput(name)
+            return orig(self, localizeStaticTextValue(name))
+        end)
+
+        HookSystem.hook(TextChoicebox, "setText", function(orig, self, text, callback)
+            text = resolveTextInput(text)
+            return orig(self, localizeStaticTextValue(text), callback)
+        end)
+    end
+
+    if Shop then
+        hookMethod(Shop, "getVoicedText", function(orig, self, text)
+            return orig(self, resolveDisplayText(text))
+        end)
+        hookMethod(Shop, "setDialogueText", function(orig, self, text, no_voice)
+            return orig(self, resolveDisplayText(text), no_voice)
+        end)
+        hookMethod(Shop, "setRightText", function(orig, self, text, no_voice)
+            return orig(self, resolveDisplayText(text), no_voice)
+        end)
+
+        hookMethod(Shop, "registerItem", function(orig, self, item, options)
+            return orig(self, item, resolveShopItemOptions(options))
+        end)
+
+        hookMethod(Shop, "replaceItem", function(orig, self, index, item, options)
+            local result = orig(self, index, item, resolveShopItemOptions(options))
+            local entry = self.items and self.items[index]
+            if result and entry and entry.options then
+                entry.options.name = resolveDisplayText(entry.options.name)
+                entry.options.description = resolveDisplayText(entry.options.description)
+            end
+            return result
+        end)
+
+        hookMethod(Shop, "registerTalk", function(orig, self, talk, color)
+            return orig(self, resolveDisplayText(talk), color)
+        end)
+
+        hookMethod(Shop, "replaceTalk", function(orig, self, talk, index, color)
+            return orig(self, resolveDisplayText(talk), index, color)
+        end)
+
+        hookMethod(Shop, "registerTalkAfter", function(orig, self, talk, index, flag, value, color)
+            return orig(self, resolveDisplayText(talk), index, flag, value, color)
+        end)
+    end
+
+    if OverworldActionBox then
+        hookMethod(OverworldActionBox, "react", function(orig, self, text, display_time)
+            return orig(self, resolveDisplayText(text), display_time)
         end)
     end
 end
@@ -1962,52 +2543,83 @@ function kristalI18n:postInit()
     hookLightMenuDraw(LightCellMenu)
 
     if GonerChoice then
+        HookSystem.hook(GonerChoice, "init", function(orig, self, x, y, choices, on_complete, on_select)
+            return orig(self, x, y, resolveGonerChoices(choices), on_complete, on_select)
+        end)
+
+        HookSystem.hook(GonerChoice, "setChoices", function(orig, self, choices, selected_x, selected_y)
+            return orig(self, resolveGonerChoices(choices), selected_x, selected_y)
+        end)
+
+        HookSystem.hook(GonerChoice, "setChoice", function(orig, self, x, y, choice)
+            return orig(self, x, y, resolveGonerChoice(choice))
+        end)
+
         HookSystem.hook(GonerChoice, "getChoiceText", function(orig, self, choice, x, y)
-            return localizeStaticText(orig(self, choice, x, y))
+            if type(choice) == "table" and choice[1] ~= nil then
+                choice = tableCopy(choice)
+                choice[1] = resolveDisplayText(choice[1])
+            end
+            return resolveDisplayText(orig(self, choice, x, y))
+        end)
+
+        HookSystem.hook(GonerChoice, "isHidden", function(orig, self, choice, x, y)
+            if type(choice) == "table" and choice[1] ~= nil then
+                choice = resolveGonerChoice(choice)
+            end
+            return orig(self, choice, x, y)
         end)
     end
 
     HookSystem.hook(Text, "init", function(orig, self, text, x, y, w, h, options)
-        options = options or {}
-        local id = options["id"] or options["loc_id"] or options["loc"]
-
-        if id then
-            text = localizeTextValue(text, id, options["var"])
-        elseif options["var"] then
-            text = Game:concat(text, options["var"])
+        if type(w) == "table" then
+            options = mergeTextOptions(w, options)
+            w, h = options, nil
         end
 
+        text, options = resolveTextInput(text, options)
+        return orig(self, text, x, y, w, h, options)
+    end)
+
+    HookSystem.hook(DialogueText, "init", function(orig, self, text, x, y, w, h, options)
+        if type(w) == "table" then
+            options = mergeTextOptions(w, options)
+            w, h = options, nil
+        end
+
+        text, options = resolveTextInput(text, options)
         return orig(self, text, x, y, w, h, options)
     end)
 
     HookSystem.hook(Text, "setText", function(orig, self, text)
+        text = resolveTextInput(text)
         text = localizeStaticTextValue(text)
         return orig(self, addCjkTextSpacingValue(text, CJK_FIXED_TEXT_SPACING))
     end)
 
     HookSystem.hook(WorldCutscene, "text", function(orig, self, text, portrait, actor, options)
-        options = options or {}
-        local id = options["id"] or options["loc_id"] or options["loc"]
-        if id then
-            text = localizeTextValue(text, id, options["var"])
-        elseif options["var"] then
-            text = Game:concat(text, options["var"])
-        end
+        text, portrait, actor, options = normalizeCutsceneTextArgs(text, portrait, actor, options)
         return orig(self, text, portrait, actor, options)
     end)
 
     HookSystem.hook(BattleCutscene, "text", function(orig, self, text, portrait, actor, options)
-        options = options or {}
-        local id = options["id"] or options["loc_id"] or options["loc"]
-        if id then
-            text = localizeTextValue(text, id, options["var"])
-        elseif options["var"] then
-            text = Game:concat(text, options["var"])
-        end
+        text, portrait, actor, options = normalizeCutsceneTextArgs(text, portrait, actor, options)
         return orig(self, text, portrait, actor, options)
     end)
 
+    HookSystem.hook(BattleCutscene, "battlerText", function(orig, self, battlers, text, options)
+        text, options = resolveTextInput(text, options)
+        return orig(self, battlers, localizeStaticTextValue(text), options)
+    end)
+
+    if LegendCutscene then
+        hookMethod(LegendCutscene, "text", function(orig, self, text, pos)
+            return orig(self, resolveDisplayText(text), pos)
+        end)
+    end
+
     HookSystem.hook(DialogueText, "setText", function(orig, self, text, ...)
+        text = resolveTextInput(text)
         text = localizeStaticTextValue(text)
 
         -- Battle speech bubbles use a Chinese-capable plain font directly.
@@ -2041,42 +2653,26 @@ function kristalI18n:postInit()
         return result
     end)
 
+    HookSystem.hook(WorldCutscene, "textChoicer", function(orig, self, text, choices, portrait, actor, options)
+        text, choices, portrait, actor, options = normalizeTextChoiceArgs(
+            text, choices, portrait, actor, options
+        )
+        return orig(self, text, choices, portrait, actor, options)
+    end)
+
     HookSystem.hook(WorldCutscene, "choicer", function(orig, self, choices, options)
-        options = options or {}
-        local ids = options["ids"] or options["loc_ids"]
-        if ids then
-            local localized = {}
-            for index, choice in ipairs(choices) do
-                localized[index] = ids[index]
-                    and Game:loc(ids[index], options["var"])
-                    or Game:locText(choice, options["var"])
-            end
-            choices = localized
-        elseif options["var"] then
-            choices = Game:concat(choices, options["var"])
-        end
+        choices, options = normalizeChoices(choices, options)
         return orig(self, choices, options)
     end)
 
     HookSystem.hook(BattleCutscene, "choicer", function(orig, self, choices, options)
-        options = options or {}
-        local ids = options["ids"] or options["loc_ids"]
-        if ids then
-            local localized = {}
-            for index, choice in ipairs(choices) do
-                localized[index] = ids[index]
-                    and Game:loc(ids[index], options["var"])
-                    or Game:locText(choice, options["var"])
-            end
-            choices = localized
-        elseif options["var"] then
-            choices = Game:concat(choices, options["var"])
-        end
+        choices, options = normalizeChoices(choices, options)
         return orig(self, choices, options)
     end)
 
     if DarkMenu then
         HookSystem.hook(DarkMenu, "setDescription", function(orig, self, text, visible)
+            text = resolveDisplayText(text)
             if type(text) == "string" then
                 local item_name = text:match("^Really throw away the\n(.+)%?$")
                 if item_name then
@@ -2091,33 +2687,70 @@ function kristalI18n:postInit()
 
     if DebugSystem then
         HookSystem.hook(DebugSystem, "registerOption", function(orig, self, menu, name, description, func, visible_func, color)
-            return orig(self, menu, name, localizeDynamicStaticTextValue(description), func, visible_func, color)
+            return orig(
+                self,
+                menu,
+                resolveDisplayText(name),
+                localizeDynamicStaticTextValue(description),
+                func,
+                visible_func,
+                color
+            )
+        end)
+
+        hookMethod(DebugSystem, "registerMenu", function(orig, self, id, name, type)
+            return orig(self, id, resolveDisplayText(name), type)
         end)
 
         HookSystem.hook(DebugSystem, "appendBool", function(orig, self, desc, bool)
             if Game.lang == "zh_hans" then
                 return Game:loc("debug_bool_suffix", {
-                    desc = localizeStaticText(desc),
+                    desc = resolveDisplayText(desc),
                     state = Game:loc(bool and "on" or "off")
                 })
             end
-            return orig(self, desc, bool)
+            return orig(self, resolveDisplayText(desc), bool)
         end)
 
         HookSystem.hook(DebugSystem, "printShadow", function(orig, self, text, ...)
-            return orig(self, localizeStaticText(text), ...)
+            return orig(self, resolveDisplayText(text), ...)
         end)
 
         refreshDebugOptionDescriptions()
     end
 
+    hookMethod(Draw, "printShadow", function(orig, text, ...)
+        return orig(resolveDisplayText(text), ...)
+    end)
+
+    hookMethod(Draw, "printAlign", function(orig, text, ...)
+        return orig(resolveDisplayText(text), ...)
+    end)
+
+    hookMethod(Battle, "addMenuItem", function(orig, self, item)
+        item = tableCopy(item or {})
+        item.name = resolveDisplayText(item.name)
+        item.description = resolveDisplayText(item.description)
+        return orig(self, item)
+    end)
+
+    hookMethod(Battle, "debugPrintOutline", function(orig, self, text, x, y, color)
+        return orig(self, resolveDisplayText(text), x, y, color)
+    end)
+
     if ContextMenu then
         HookSystem.hook(ContextMenu, "init", function(orig, self, name)
-            return orig(self, localizeStaticText(name))
+            return orig(self, resolveDisplayText(name))
         end)
 
         HookSystem.hook(ContextMenu, "addMenuItem", function(orig, self, name, description, callback, options)
-            return orig(self, localizeStaticText(name), localizeStaticText(description), callback, options)
+            return orig(
+                self,
+                resolveDisplayText(name),
+                resolveDisplayText(description),
+                callback,
+                options
+            )
         end)
 
         HookSystem.hook(ContextMenu, "getInnerWidth", function(orig, self)
@@ -2235,11 +2868,106 @@ function kristalI18n:postInit()
         end)
     end
 
+    if FileButton then
+        hookMethod(FileButton, "setData", function(orig, self, data)
+            return orig(self, resolveFileData(data))
+        end)
+
+        hookMethod(FileButton, "setChoices", function(orig, self, choices, prompt)
+            return orig(self, resolveTextList(choices), resolveDisplayText(prompt))
+        end)
+    end
+
+    if MainMenuModConfig then
+        hookMethod(MainMenuModConfig, "registerOption", function(orig, self, id, name, description, type, options)
+            return orig(
+                self,
+                id,
+                resolveDisplayText(name),
+                resolveDisplayText(description),
+                type,
+                resolveTextList(options)
+            )
+        end)
+    end
+
+    if MainMenuOptions then
+        hookMethod(MainMenuOptions, "registerOptionsPage", function(orig, self, id, name)
+            return orig(self, id, resolveDisplayText(name))
+        end)
+        hookMethod(MainMenuOptions, "registerOption", function(orig, self, page, name, value, callback)
+            return orig(
+                self,
+                page,
+                resolveDisplayText(name),
+                localizeDynamicStaticTextValue(value),
+                callback
+            )
+        end)
+    end
+
+    if FileNamer then
+        hookMethod(FileNamer, "init", function(orig, self, options)
+            return orig(self, resolveFileNamerOptions(options))
+        end)
+    end
+
+    if ListMenuItemComponent then
+        hookMethod(ListMenuItemComponent, "init", function(orig, self, list, value, on_changed, options)
+            options = tableCopy(options)
+            options.prefix = resolveDisplayText(options.prefix)
+            options.suffix = resolveDisplayText(options.suffix)
+            return orig(self, resolveListMenuValues(list), value, on_changed, options)
+        end)
+    end
+
+    if SmallFaceText then
+        hookMethod(SmallFaceText, "init", function(orig, self, text, x, y, face, actor)
+            return orig(self, resolveDisplayText(text), x, y, face, actor)
+        end)
+    end
+
+    if HPText then
+        hookMethod(HPText, "init", function(orig, self, text, x, y)
+            return orig(self, resolveDisplayText(text), x, y)
+        end)
+    end
+
+    if ModButton then
+        hookMethod(ModButton, "init", function(orig, self, name, width, height, mod)
+            return orig(self, resolveDisplayText(name), width, height, mod)
+        end)
+        hookMethod(ModButton, "setName", function(orig, self, name)
+            return orig(self, resolveDisplayText(name))
+        end)
+        hookMethod(ModButton, "setSubtitle", function(orig, self, subtitle)
+            return orig(self, resolveDisplayText(subtitle))
+        end)
+    end
+
+    if MainMenuFileSelect then
+        hookMethod(MainMenuFileSelect, "setResultText", function(orig, self, text)
+            return orig(self, resolveDisplayText(text))
+        end)
+    end
+
+    if TextMenuItemComponent then
+        hookMethod(TextMenuItemComponent, "init", function(orig, self, text, callback, options)
+            return orig(self, resolveDisplayText(text), callback, options)
+        end)
+    end
+
+    if LabelMenuItemComponent then
+        hookMethod(LabelMenuItemComponent, "init", function(orig, self, text, child, x_sizing, y_sizing, options)
+            return orig(self, resolveDisplayText(text), child, x_sizing, y_sizing, options)
+        end)
+    end
+
     if DebugWindow then
         HookSystem.hook(DebugWindow, "init", function(orig, self, name, text, type, callback)
-            local result = orig(self, localizeStaticText(name), localizeStaticText(text), type, callback)
+            local result = orig(self, resolveDisplayText(name), resolveDisplayText(text), type, callback)
             for index, button in ipairs(self.buttons or {}) do
-                self.buttons[index] = localizeStaticText(button)
+                self.buttons[index] = resolveDisplayText(button)
             end
             return result
         end)
@@ -2258,9 +2986,10 @@ function kristalI18n:postInit()
 
             for _, line in ipairs(text) do
                 Draw.setColor(self.color)
-                if type(line) == "table" then
+                if type(line) == "table" and not isTextDescriptor(line) then
                     self.color = line
                 else
+                    line = resolveDisplayText(line)
                     self:printOutlined(line, x + x_offset, y)
                     if shouldPrintWithCjkSpacing(line) then
                         x_offset = x_offset + getCjkPrintedTextWidth(self.font, line)
@@ -2272,7 +3001,7 @@ function kristalI18n:postInit()
         end)
 
         HookSystem.hook(Console, "push", function(orig, self, str)
-            return orig(self, localizeStaticText(str))
+            return orig(self, resolveDisplayText(str))
         end)
         refreshConsoleStartupHistory()
     end
@@ -2415,6 +3144,24 @@ function Game:getNameLanguageName(language)
 end
 
 function Game:loc(id, var)
+    if isTextDescriptor(id) then
+        local descriptor_id = getTextId(id)
+        local descriptor_options = id.options or {}
+        local descriptor_var = descriptor_options.var
+            or (id.var ~= nil and id.var or var)
+        if descriptor_id ~= nil then
+            return Game:loc(descriptor_id, descriptor_var)
+        end
+        return Game:locText(id.text, descriptor_var)
+    end
+
+    if type(id) == "string" then
+        local stripped = id:match("^%{([%w_./]+)%}$")
+        if stripped then
+            id = stripped
+        end
+    end
+
     if type(id) ~= "string" or id == "" then
         error("Game:loc expects a non-empty localization id")
     end
@@ -2428,8 +3175,30 @@ function Game:loc(id, var)
 end
 
 function Game:locText(text, var)
+    if isTextDescriptor(text) then
+        local descriptor_id = getTextId(text)
+        local descriptor_options = text.options or {}
+        local descriptor_var = descriptor_options.var
+            or (text.var ~= nil and text.var or var)
+        if descriptor_id ~= nil then
+            return Game:loc(descriptor_id, descriptor_var)
+        end
+        return Game:locText(text.text, descriptor_var)
+    end
+
     if type(text) ~= "string" then
-        error("Game:locText expects a string")
+        if type(text) == "table" then
+            if isClassInstance(text) or isColorTable(text) then
+                return text
+            end
+
+            local out = {}
+            for key, value in pairs(text) do
+                out[key] = Game:locText(value, var)
+            end
+            return out
+        end
+        error("Game:locText expects a string or text descriptor")
     end
     return Game:concat(text, var)
 end
@@ -2449,7 +3218,22 @@ function Game:hasStr(id)
 end
 
 function Game:concat(value, var)
+    if isTextDescriptor(value) then
+        local id = getTextId(value)
+        local descriptor_options = value.options or {}
+        local descriptor_var = descriptor_options.var
+            or (value.var ~= nil and value.var or var)
+        if id ~= nil then
+            return Game:loc(id, descriptor_var)
+        end
+        return Game:concat(value.text, descriptor_var)
+    end
+
     if type(value) == "table" then
+        if isClassInstance(value) or isColorTable(value) then
+            return value
+        end
+
         local out = {}
         for key, item in pairs(value) do
             out[key] = Game:concat(item, var)
@@ -2458,17 +3242,17 @@ function Game:concat(value, var)
     end
 
     local str = replaceNameReferences(tostring(value or ""))
-    if not var then
-        return str
+    if var then
+        str = (str:gsub("%[var:([^%]]+)%]", function(key)
+            local replacement = var[key]
+            if replacement == nil then
+                return ""
+            end
+            return tostring(replacement)
+        end))
     end
 
-    return (str:gsub("%[var:([^%]]+)%]", function(key)
-        local replacement = var[key]
-        if replacement == nil then
-            return ""
-        end
-        return tostring(replacement)
-    end))
+    return resolveIdInterpolation(str, var)
 end
 
 return kristalI18n

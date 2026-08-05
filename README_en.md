@@ -175,16 +175,61 @@ You can also resolve the ID directly in `cutscene:text`:
 cutscene:text(Game:loc("room1.hello", {name = "Kris"}), "smile", "ralsei")
 ```
 
-### Tiled Dialogue
+### `{id}` Interpolation Syntax (recommended)
 
-NPCs, Interactables, and Savepoints can define dialogue directly with properties such as `id1` and `id2`:
+The simplest way: embed a localization ID anywhere in a text string using `{key}`. The original `cutscene:text` signature stays untouched — no descriptors, no options tables:
 
-```text
-id1 = room1.hello
-id2 = room1.goodbye
+```lua
+-- Pure ID: the whole string is replaced by the localized text
+cutscene:text("{room1.hello}")
+
+-- Mixed: only the {id} parts are replaced, the rest stays as-is
+cutscene:text("* {name_susie} threw a punch at\nthe {name_dummy}.")
+
+-- Multiple IDs can be combined in one string
+cutscene:text("{name_susie} attacked {name_dummy}!")
+
+-- Choices work too
+cutscene:choicer({"{choice.yes}", "{choice.no}"})
 ```
 
-When IDs are present, they are the only source for both dialogue content and dialogue structure, so matching `text1` and `text2` properties are unnecessary. Objects without IDs can still use Kristal's native `text` properties for raw rich text.
+`{key}` looks up the language table and applies the same rules as `Game:loc`: a missing key renders a red error marker instead of silently falling back. The key must contain at least one ASCII letter, so literal text like `{50}` or `{You hear something...}` passes through untouched. Kristal's text commands use `[...]` brackets, so there is no conflict.
+
+`{id}` also works inside language table values, so translations can reference other keys:
+
+```json
+{
+    "room1.hello": "* Hello, {name_kris}!"
+}
+```
+
+The existing descriptor and `options.id` patterns remain fully supported.
+
+Every library entry point that accepts text also supports the same text descriptor, so an ID does not require a duplicated fallback string:
+
+```lua
+local by_id = {id = "room1.hello", var = {name = "Kris"}}
+local raw = {text = "* This text is intentionally not in the language table."}
+local both = {id = "room1.hello", text = "ignored fallback"}
+
+cutscene:text(by_id)
+Text(by_id, 20, 20)
+Game.world:showText(by_id)
+cutscene:battlerText("dummy", by_id)
+```
+
+You may provide only `id`, only `text`, or both. When both are present, `id` is always authoritative and `text` is ignored. Existing string calls and `options.id` calls remain compatible. A missing ID renders a red error marker instead of silently using the code-side fallback.
+
+### Tiled Dialogue
+
+NPCs, Interactables, and Savepoints use Kristal's native `text1`/`text2` properties with `{id}` interpolation for localization:
+
+```text
+text1 = {room1.hello}
+text2 = {room1.goodbye}
+```
+
+Properties without `{...}` are displayed as raw rich text, exactly like vanilla Kristal. Edit the `.tmx` in Tiled and export to Lua — never hand-edit the exported `.lua` map files.
 
 ### Choice Localization
 
@@ -200,6 +245,16 @@ local choice = cutscene:choicer({"Yes", "No"}, {
     "choice.no": "否"
 }
 ```
+
+Choices can also be ID-only, or mixed by index:
+
+```lua
+cutscene:choicer({ids = {"choice.yes", "choice.no"}})
+cutscene:choicer({"ignored", "No"}, {ids = {"choice.yes"}})
+cutscene:textChoicer({id = "room1.prompt"}, {ids = {"choice.yes", "choice.no"}})
+```
+
+`World:showText`, battle text, battle speech bubbles, `Text`/`DialogueText`/`Textbox`, `choicer`, and `textChoicer` all follow the same rule.
 
 ### Asset Localization
 
