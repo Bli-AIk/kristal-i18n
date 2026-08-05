@@ -175,16 +175,61 @@ cutscene:text(Game:loc("room1.hello", {name = "Kris"}))
 cutscene:text(Game:loc("room1.hello", {name = "Kris"}), "smile", "ralsei")
 ```
 
-### Tiled 对话
+### `{id}` 内插语法（推荐）
 
-NPC、Interactable 和 Savepoint 支持使用 `id1`、`id2` 等属性直接定义对话：
+最简单的方式：在任意文本字符串中用 `{key}` 内嵌本地化 ID。`cutscene:text` 的原始签名完全不变——不需要 descriptor，也不需要 options 表：
 
-```text
-id1 = room1.hello
-id2 = room1.goodbye
+```lua
+-- 纯 ID：整串替换为本地化文本
+cutscene:text("{room1.hello}")
+
+-- 混合：只有 {id} 部分被替换，其余原样保留
+cutscene:text("* {name_susie} threw a punch at\nthe {name_dummy}.")
+
+-- 多个 ID 可以在同一字符串中组合
+cutscene:text("{name_susie} attacked {name_dummy}!")
+
+-- 选项同样支持
+cutscene:choicer({"{choice.yes}", "{choice.no}"})
 ```
 
-存在 ID 时，ID 是对话内容和对话结构的唯一来源，不需要再填写对应的 `text1`、`text2`。没有 ID 的对象仍可使用 Kristal 原生的 `text` 属性显示原始富文本。
+`{key}` 与 `Game:loc` 遵循相同规则：缺失的 key 会显示红色错误标记，不会静默回退。key 必须包含至少一个 ASCII 字母，因此字面文本如 `{50}` 或 `{你听到了什么...}` 会原样保留。Kristal 的文本命令使用 `[...]` 括号，两者零冲突。
+
+`{id}` 也可以用在语言表的值中，让翻译引用其他 key：
+
+```json
+{
+    "room1.hello": "* 你好，{name_kris}！"
+}
+```
+
+现有的 descriptor 和 `options.id` 写法仍然完全兼容。
+
+所有接收文本的库入口都支持统一的文本描述对象，因此不需要为了填写 ID 再重复写一份 fallback：
+
+```lua
+local by_id = {id = "room1.hello", var = {name = "Kris"}}
+local raw = {text = "* This text is intentionally not in the language table."}
+local both = {id = "room1.hello", text = "ignored fallback"}
+
+cutscene:text(by_id)
+Text(by_id, 20, 20)
+Game.world:showText(by_id)
+cutscene:battlerText("dummy", by_id)
+```
+
+可以只写 `id`、只写 `text`，也可以同时写两者；同时存在时 `id` 永远优先，`text` 会被忽略。原有的字符串写法和 `options.id` 写法仍然兼容。ID 缺失时会显示红色错误标记，不会悄悄使用代码中的 fallback。
+
+### Tiled 对话
+
+NPC、Interactable 和 Savepoint 使用 Kristal 原生的 `text1`、`text2` 属性配合 `{id}` 内插实现本地化：
+
+```text
+text1 = {room1.hello}
+text2 = {room1.goodbye}
+```
+
+不含 `{...}` 的属性按 Kristal 原生方式显示原始富文本。请在 Tiled 中编辑 `.tmx` 后导出 Lua——切勿手改导出的 `.lua` 地图文件。
 
 ### 选项本地化
 
@@ -200,6 +245,16 @@ local choice = cutscene:choicer({"Yes", "No"}, {
     "choice.no": "否"
 }
 ```
+
+选项也可以只写 ID，或按索引混用：
+
+```lua
+cutscene:choicer({ids = {"choice.yes", "choice.no"}})
+cutscene:choicer({"ignored", "No"}, {ids = {"choice.yes"}})
+cutscene:textChoicer({id = "room1.prompt"}, {ids = {"choice.yes", "choice.no"}})
+```
+
+`World:showText`、战斗文本、战斗气泡、`Text`/`DialogueText`/`Textbox`、`choicer` 和 `textChoicer` 都遵循同一规则。
 
 ### 资源本地化
 
