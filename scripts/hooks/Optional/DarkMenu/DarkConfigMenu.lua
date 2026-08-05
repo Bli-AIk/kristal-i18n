@@ -45,7 +45,7 @@ local function changeLanguage(direction)
     local old_selected = Game.langSelected
     Game.langSelected = Game.langSelected + direction
 
-    local languages = Game.langAvailable or Game.langAvalable or {"en"}
+    local languages = Game.langAvailable or {"en"}
     Game.langSelected = MathUtils.clamp(Game.langSelected, 1, #languages)
     if old_selected ~= Game.langSelected then
         Game:setLanguage(languages[Game.langSelected])

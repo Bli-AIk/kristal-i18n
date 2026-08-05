@@ -4,7 +4,7 @@ local function getTextId(value)
     if type(value) ~= "table" then
         return nil
     end
-    return value.id or value.loc_id or value.loc
+    return value.id
 end
 
 local function isTextDescriptor(value)
@@ -54,7 +54,7 @@ function WorldCutscene:text(text, portrait, actor, options)
         text = descriptor.text
         for key, value in pairs(descriptor) do
             if key ~= "text" and key ~= "options" and type(key) ~= "number"
-                and key ~= "choices" and key ~= "ids" and key ~= "loc_ids"
+                and key ~= "choices" and key ~= "ids"
             then
                 options[key] = value
             end
@@ -64,7 +64,7 @@ function WorldCutscene:text(text, portrait, actor, options)
         end
     end
 
-    local id = options["id"] or options["loc_id"] or options["loc"]
+    local id = options["id"]
     if id ~= nil then
         text = Game:loc(id, options["var"])
     elseif type(text) == "table" or options["var"] then
