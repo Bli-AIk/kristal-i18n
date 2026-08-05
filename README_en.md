@@ -169,14 +169,22 @@ Language table:
 
 The first argument to `Game:loc` is always an ID; English fallback text is no longer accepted. For rich text that intentionally does not belong in a language table, use the explicit `Game:locText(text, vars)` entry point.
 
-You can also pass the id directly in `cutscene:text`:
+You can also resolve the ID directly in `cutscene:text`:
 
 ```lua
-cutscene:text("* Hello, [var:name].", "smile", "ralsei", {
-    id = "room1.hello",
-    var = {name = "Kris"}
-})
+cutscene:text(Game:loc("room1.hello", {name = "Kris"}), "smile", "ralsei")
 ```
+
+### Tiled Dialogue
+
+NPCs, Interactables, and Savepoints can define dialogue directly with properties such as `id1` and `id2`:
+
+```text
+id1 = room1.hello
+id2 = room1.goodbye
+```
+
+When IDs are present, they are the only source for both dialogue content and dialogue structure, so matching `text1` and `text2` properties are unnecessary. Objects without IDs can still use Kristal's native `text` properties for raw rich text.
 
 ### Choice Localization
 

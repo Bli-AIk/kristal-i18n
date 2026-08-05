@@ -244,13 +244,11 @@ local GAMEOVER_PARTY_TEXT_IDS = {
 local CONSOLE_STARTUP_MESSAGES = {
     {
         index = 1,
-        default = "Welcome to [color:cyan]KRISTAL[color:reset]! This is the debug console.",
         plain = "Welcome to KRISTAL! This is the debug console.",
         id = "console_welcome",
     },
     {
         index = 2,
-        default = "You can enter Lua here to be ran! Use [color:gray]clear()[color:reset] to clear the console.",
         plain = "You can enter Lua here to be ran! Use clear() to clear the console.",
         id = "console_lua_hint",
     },
