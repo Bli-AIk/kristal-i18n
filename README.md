@@ -100,7 +100,7 @@ Game:loc("room1.hello", {name = "Kris"})   -- 带变量
 | 项目 | 作者/组织 |
 |------|-----------|
 | [LangLib](https://gamebanana.com/mods/627141) | Elioze |
-| [DELTARUNE: Frostveil（三角符文：冰封帷幕）](https://space.bilibili.com/1641628190) 和 Frozen Heart（冰封之心）汉化 | [WasneetPotato](https://space.bilibili.com/1641628190) |
+| [DELTARUNE: Frostveil（三角符文：冰封帷幕）](https://www.bilibili.com/video/BV12nQKB9E3V) 和 [Frozen Heart（冰封之心）](https://www.bilibili.com/video/BV18CC4Y6EFo) 汉化 | [WasneetPotato](https://space.bilibili.com/1641628190) |
 | [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [好人汉化组（Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization）](https://github.com/gm3dr/) |
 | 中文 fork | Aik/Codex |
 
