@@ -77,12 +77,19 @@ Defaults live in `lib.json`; override them in your mod's `mod.json`:
         "languageNames": {
             "en": "English",
             "zh_hans": "简体中文"
-        }
+        },
+        "languageToggleKey": "f7",
+        "cjkFixedTextSpacing": 4,
+        "cjkDialogueTextSpacing": 4,
+        "cjkDialogueYOffset": -1,
+        "cjkTypewriterSpeedMultiplier": 1
     }
 }
 ```
 
-`defaultLanguage` can be a specific language ID or `"auto"` (detects the system language and picks the best match). The name language is independent from the text language.
+- `defaultLanguage` — a specific language ID or `"auto"` (detects the system language and picks the best match); the name language is independent from the text language
+- `languageToggleKey` — the key that quickly toggles the language; set to `false` to disable
+- `cjk*` — fine-tuning for Chinese typesetting: fixed character spacing, dialogue spacing and vertical offset, and typewriter speed multiplier. These adjustments exist specifically for Chinese (not needed for English); override them to fit other CJK languages or tweak the look
 
 ## Upstream & References
 
@@ -93,7 +100,7 @@ The bundled Chinese texture overrides use texture assets from [Goodman 3 Localiz
 | Project | Author/Organization |
 |---------|---------------------|
 | [LangLib](https://gamebanana.com/mods/627141) | Elioze |
-| Chinese localization references from other Kristal projects | [WasneetPotato](https://space.bilibili.com/1641628190) |
+| [DELTARUNE: Frostveil](https://space.bilibili.com/1641628190) and Frozen Heart localization | [WasneetPotato](https://space.bilibili.com/1641628190) |
 | [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/) |
 | Chinese fork | Aik/Codex |
 
