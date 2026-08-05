@@ -102,7 +102,7 @@ The bundled Chinese texture overrides use texture assets from [Goodman 3 Localiz
 | [LangLib](https://gamebanana.com/mods/627141) | Elioze |
 | [DELTARUNE: Frostveil](https://www.bilibili.com/video/BV12nQKB9E3V) and [Frozen Heart](https://www.bilibili.com/video/BV18CC4Y6EFo) localization | [WasneetPotato](https://space.bilibili.com/1641628190) |
 | [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/) |
-| Chinese fork | Aik/Codex |
+| Chinese fork | Aik |
 
 ## Contributing
 
