@@ -9,7 +9,7 @@
 
 ![Screenshot](./screenshot.png)
 
-**kristal-i18n** — a multilingual localization library for Kristal `v0.10.x`, modified from Elioze's [LangLib](https://gamebanana.com/mods/627141) on GameBanana, with English and Simplified Chinese resources included.
+**kristal-i18n** — a multilingual localization library for Kristal `v0.10.x`. Its hook skeleton and preset ID patterns are inherited from Elioze's [LangLib](https://gamebanana.com/mods/627141) on GameBanana, while the core API, language system, and CJK typesetting are a new implementation. English and Simplified Chinese resources are included.
 
 | English | 简体中文 |
 |---------|---------|
@@ -21,6 +21,8 @@
 
 Once the library is installed, a mod only needs a language JSON file to achieve full Chinese localization — no game logic changes required.
 
+> ⚠️ **Note: this library's API is NOT compatible with the original LangLib.** The first argument of `Game:loc` is always an ID (`Game:loc("key", {var = ...})`); LangLib's `Game:loc("fallback", "id")` two-argument form is not accepted. A missing ID renders a red error marker instead of silently falling back. Legacy language file names from LangLib (`lang/lang_<lang>.json`) are still accepted.
+
 ## Features
 
 - 🌐 Language-ID based text and asset tables with built-in `en` and `zh_hans`
@@ -28,7 +30,7 @@ Once the library is installed, a mod only needs a language JSON file to achieve 
 - 👤 `[name:xxx]` name references with a selectable name language
 - 🔍 `auto` mode for automatic system language detection and best-match selection
 - 🔄 Runtime language switching (the integration mod binds it to F7), persisted to save data
-- 📝 `Game:loc(id, vars)`, `cutscene:text(..., {id = "text_id"})`, and `cutscene:choicer(..., {ids = {...}})` for ID-based localization
+- 📝 `{id}` string interpolation — embed localization IDs directly in text via `cutscene:text("{room1.hello}")`; also supports `Game:loc(id, vars)`, `cutscene:text(..., {id = "text_id"})`, and `cutscene:choicer(..., {ids = {...}})`
 - 🎨 Language-specific asset overrides: fonts, sprites, audio, music, and video via `lang/<lang>/...` paths
 - 🔣 Automatic CJK character spacing adjustment and typewriter speed correction
 - 📋 Automatic hooks for text, choices, Tiled NPC/Interactable, items, spells, and menus
@@ -305,7 +307,7 @@ data.langDebugTermsTranslated
 
 ## Upstream & References
 
-This library is based on [LangLib](https://gamebanana.com/mods/627141) from GameBanana and references the following Chinese localization projects:
+This library's hook skeleton and preset ID patterns are inherited from [LangLib](https://gamebanana.com/mods/627141) from GameBanana (API-incompatible, see the warning above) and references the following Chinese localization projects:
 
 The bundled Chinese texture overrides use texture assets from [Goodman 3 Localization Group | UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/).
 

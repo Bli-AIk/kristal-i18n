@@ -9,7 +9,7 @@
 
 ![效果图](./screenshot.png)
 
-**kristal-i18n** — Kristal `v0.10.x` 的多语言本地化库，基于 GameBanana 上 Elioze 的 [LangLib](https://gamebanana.com/mods/627141) 修改，当前附带英文与简体中文资源。
+**kristal-i18n** — Kristal `v0.10.x` 的多语言本地化库，hook 骨架与预置 ID 模式继承自 GameBanana 上 Elioze 的 [LangLib](https://gamebanana.com/mods/627141)，核心 API、语言系统与 CJK 排版为全新实现，当前附带英文与简体中文资源。
 
 | 简体中文 | English |
 |---------|---------|
@@ -21,6 +21,8 @@
 
 引入本库后，模组只需编写语言表 JSON 文件即可实现完整中文化，无需修改游戏逻辑代码。
 
+> ⚠️ **注意：本库 API 与原版 LangLib 不兼容。** `Game:loc` 的第一个参数始终是 ID（`Game:loc("key", {var = ...})`），不接受 LangLib 的 `Game:loc("fallback", "id")` 双参数写法；缺失 ID 显示红色错误标记而非静默 fallback。从 LangLib 迁移的旧语言文件名 `lang/lang_<lang>.json` 仍然兼容。
+
 ## 特性
 
 - 🌐 按语言 ID 管理文本与资源，内置 `en`、`zh_hans`
@@ -28,7 +30,7 @@
 - 👤 `[name:xxx]` 名字引用，支持按语言选择名称
 - 🔍 `auto` 模式自动检测系统语言并匹配最佳可用语言
 - 🔄 运行时语言切换（由集成模组绑定 F7 快捷键），切换结果写入存档
-- 📝 `Game:loc(id, vars)`、`cutscene:text(..., {id = "text_id"})` 和 `cutscene:choicer(..., {ids = {...}})` 按 ID 本地化
+- 📝 `{id}` 字符串内插——`cutscene:text("{room1.hello}")` 直接在文本中嵌入本地化 ID；同时支持 `Game:loc(id, vars)`、`cutscene:text(..., {id = "text_id"})` 和 `cutscene:choicer(..., {ids = {...}})`
 - 🎨 资源按语言覆盖：字体、贴图、音频、音乐、视频均可放到 `lang/<语言>/...` 路径
 - 🔣 CJK 字符自动字间距调整与打字机速度修正
 - 📋 文本、选项、Tiled NPC/Interactable、物品、技能、菜单等常见入口自动 hook
@@ -305,7 +307,7 @@ data.langDebugTermsTranslated
 
 ## 上游来源与参考
 
-本库基于 GameBanana 的 [LangLib](https://gamebanana.com/mods/627141) 改造，并参考了以下汉化项目：
+本库的 hook 骨架与预置 ID 模式继承自 GameBanana 的 [LangLib](https://gamebanana.com/mods/627141)（API 不兼容，见上文警告），并参考了以下汉化项目：
 
 本库内置的中文贴图使用了 [好人汉化组（Goodman 3 Localization Group | UNDERTALE & DELTARUNE Chinese Localization）](https://github.com/gm3dr/) 的贴图。
 
