@@ -45,9 +45,16 @@ Reference it with `{key}` in your code:
 cutscene:text("{room1.hello}")
 ```
 
-Done. Press F7 in game to switch languages (default `en` / `zh_hans`).
+Done. Players can switch languages in the in-game **settings menu** (default `en` / `zh_hans`).
 
-> ⚠️ **API is NOT compatible with the original LangLib**: the first argument of `Game:loc` is always an ID (`Game:loc("key", {var = ...})`); LangLib's `Game:loc("fallback", "id")` form is not accepted. Missing IDs render as red error markers.
+Besides curly braces, you can also call `Game:loc` directly:
+
+```lua
+Game:loc("room1.hello")                    -- ID lookup
+Game:loc("room1.hello", {name = "Kris"})   -- with variables
+```
+
+> ⚠️ **API is NOT compatible with the original LangLib**: the first argument of `Game:loc` is always an ID; LangLib's `Game:loc("fallback", "id")` form is not accepted. Missing IDs render as red error markers.
 
 ## More Tips
 
