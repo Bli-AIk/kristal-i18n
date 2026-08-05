@@ -7,7 +7,20 @@
 
 > Current Status: ✅ Stable
 
-![Screenshot](./screenshot.png)
+![In battle](./screenshot-battle.png)
+
+<details>
+<summary>More screenshots (save screen / ability / debug / light world inventory)</summary>
+
+![Save screen](./screenshot.png)
+
+![Ability screen](./screenshot-ability.png)
+
+![Debug screen](./screenshot-debug.png)
+
+![Light world inventory](./screenshot-light-inventory.png)
+
+</details>
 
 **kristal-i18n** — a multilingual localization library for Kristal, with English and Simplified Chinese built in.
 
@@ -102,7 +115,7 @@ The bundled Chinese texture overrides use texture assets from [Goodman 3 Localiz
 | [LangLib](https://gamebanana.com/mods/627141) | Elioze |
 | [DELTARUNE: Frostveil](https://www.bilibili.com/video/BV12nQKB9E3V) and [Frozen Heart](https://www.bilibili.com/video/BV18CC4Y6EFo) localization | [WasneetPotato](https://space.bilibili.com/1641628190) |
 | [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/) |
-| Chinese fork | Aik |
+| Chinese fork | AIk |
 
 ## Contributing
 
