@@ -7,6 +7,12 @@ local CJK_FIXED_TEXT_SPACING = 4
 local CJK_DIALOGUE_TEXT_SPACING = 4
 local CJK_DIALOGUE_Y_OFFSET = -1
 local CJK_TYPEWRITER_SPEED_MULTIPLIER = 1 --0.85
+
+-- Runtime CJK layout values, overridable via config (see loadCjkConfig).
+local cjkFixedTextSpacing = CJK_FIXED_TEXT_SPACING
+local cjkDialogueTextSpacing = CJK_DIALOGUE_TEXT_SPACING
+local cjkDialogueYOffset = CJK_DIALOGUE_Y_OFFSET
+local cjkTypewriterSpeedMultiplier = CJK_TYPEWRITER_SPEED_MULTIPLIER
 local DEFAULT_LANGUAGE_TOGGLE_KEY = "f7"
 local ID_INTERP_PATTERN = "%{([%w_./]*[a-zA-Z][%w_./]*)%}"
 
@@ -262,6 +268,13 @@ local function getConfig(key, merge, deep_merge)
             return value
         end
     end
+end
+
+local function loadCjkConfig()
+    cjkFixedTextSpacing = getConfig("cjkFixedTextSpacing") or CJK_FIXED_TEXT_SPACING
+    cjkDialogueTextSpacing = getConfig("cjkDialogueTextSpacing") or CJK_DIALOGUE_TEXT_SPACING
+    cjkDialogueYOffset = getConfig("cjkDialogueYOffset") or CJK_DIALOGUE_Y_OFFSET
+    cjkTypewriterSpeedMultiplier = getConfig("cjkTypewriterSpeedMultiplier") or CJK_TYPEWRITER_SPEED_MULTIPLIER
 end
 
 local function tableCopy(tbl)
@@ -1007,7 +1020,7 @@ local function getCjkPrintedTextWidth(font, text)
         local char = utf8.char(codepoint)
         width = width + font:getWidth(char)
         if isCjkCodepoint(codepoint) then
-            width = width + CJK_FIXED_TEXT_SPACING
+            width = width + cjkFixedTextSpacing
         end
     end
     return width
@@ -1060,7 +1073,7 @@ local function printCjkTextWithSpacing(orig, text, x, y, r, sx, sy, ox, oy, kx, 
             orig(char, cursor_x, cursor_y)
             cursor_x = cursor_x + font:getWidth(char)
             if isCjkCodepoint(codepoint) then
-                cursor_x = cursor_x + CJK_FIXED_TEXT_SPACING
+                cursor_x = cursor_x + cjkFixedTextSpacing
             end
         end
     end
@@ -2357,6 +2370,7 @@ applySpellLocalizationPatch = function(spell)
 end
 
 function kristalI18n:init()
+    loadCjkConfig()
     ensureLanguageGlobals()
     hookRegistryItemCreation()
     hookFrameworkLocalization()
@@ -2583,7 +2597,7 @@ function kristalI18n:postInit()
     HookSystem.hook(Text, "setText", function(orig, self, text)
         text = resolveTextInput(text)
         text = localizeStaticTextValue(text)
-        return orig(self, addCjkTextSpacingValue(text, CJK_FIXED_TEXT_SPACING))
+        return orig(self, addCjkTextSpacingValue(text, cjkFixedTextSpacing))
     end)
 
     HookSystem.hook(WorldCutscene, "text", function(orig, self, text, portrait, actor, options)
@@ -2617,7 +2631,7 @@ function kristalI18n:postInit()
             return orig(self, text, ...)
         end
 
-        return orig(self, addCjkTextSpacingValue(text, CJK_DIALOGUE_TEXT_SPACING, CJK_DIALOGUE_Y_OFFSET), ...)
+        return orig(self, addCjkTextSpacingValue(text, cjkDialogueTextSpacing, cjkDialogueYOffset), ...)
     end)
 
     HookSystem.hook(DialogueText, "updateTypewriter", function(orig, self)
@@ -2631,7 +2645,7 @@ function kristalI18n:postInit()
         end
 
         local speed = self.state.speed
-        self.state.speed = speed * CJK_TYPEWRITER_SPEED_MULTIPLIER
+        self.state.speed = speed * cjkTypewriterSpeedMultiplier
         local ok, result = pcall(orig, self)
         self.state.speed = speed
 

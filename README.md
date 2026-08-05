@@ -77,12 +77,19 @@ Game:loc("room1.hello", {name = "Kris"})   -- 带变量
         "languageNames": {
             "en": "English",
             "zh_hans": "简体中文"
-        }
+        },
+        "languageToggleKey": "f7",
+        "cjkFixedTextSpacing": 4,
+        "cjkDialogueTextSpacing": 4,
+        "cjkDialogueYOffset": -1,
+        "cjkTypewriterSpeedMultiplier": 1
     }
 }
 ```
 
-`defaultLanguage` 可以是具体语言 ID 或 `"auto"`（自动检测系统语言并匹配最佳可用语言）。名称语言与文本语言独立，可分别设置。
+- `defaultLanguage` — 具体语言 ID 或 `"auto"`（自动检测系统语言并匹配最佳可用语言）；名称语言与文本语言独立
+- `languageToggleKey` — 快捷切换语言的按键；`false` 可禁用
+- `cjk*` — 中文排版微调：字符间固定字间距、对话字间距与垂直偏移、打字机速度倍率。本库为中文特意做了这些调整（英文无需），如需适配其他 CJK 语言或修改观感可覆盖
 
 ## 上游来源与参考
 
@@ -93,7 +100,7 @@ Game:loc("room1.hello", {name = "Kris"})   -- 带变量
 | 项目 | 作者/组织 |
 |------|-----------|
 | [LangLib](https://gamebanana.com/mods/627141) | Elioze |
-| 若干其他 Kristal 项目的汉化参考 | [WasneetPotato](https://space.bilibili.com/1641628190) |
+| [DELTARUNE: Frostveil（三角符文：冰封帷幕）](https://space.bilibili.com/1641628190) 和 Frozen Heart（冰封之心）汉化 | [WasneetPotato](https://space.bilibili.com/1641628190) |
 | [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [好人汉化组（Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization）](https://github.com/gm3dr/) |
 | 中文 fork | Aik/Codex |
 
