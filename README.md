@@ -5,8 +5,6 @@
 <img src="https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
 <img src="https://img.shields.io/badge/Kristal-FF6B35?style=for-the-badge&logo=love2d&logoColor=white" />
 
-> 当前状态：✅ 稳定可用
-
 ![战斗内展示](./screenshot-battle.png)
 
 <details>
