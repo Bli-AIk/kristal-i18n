@@ -169,14 +169,22 @@ cutscene:text(Game:loc("room1.hello", {name = "Kris"}))
 
 `Game:loc` 的第一个参数始终是 ID，不再接受英文 fallback。需要处理没有进入语言表的原始富文本时，显式使用 `Game:locText(text, vars)`。
 
-也可以在 `cutscene:text` 中直接传 id：
+也可以在 `cutscene:text` 中直接使用 ID 查表：
 
 ```lua
-cutscene:text("* Hello, [var:name].", "smile", "ralsei", {
-    id = "room1.hello",
-    var = {name = "Kris"}
-})
+cutscene:text(Game:loc("room1.hello", {name = "Kris"}), "smile", "ralsei")
 ```
+
+### Tiled 对话
+
+NPC、Interactable 和 Savepoint 支持使用 `id1`、`id2` 等属性直接定义对话：
+
+```text
+id1 = room1.hello
+id2 = room1.goodbye
+```
+
+存在 ID 时，ID 是对话内容和对话结构的唯一来源，不需要再填写对应的 `text1`、`text2`。没有 ID 的对象仍可使用 Kristal 原生的 `text` 属性显示原始富文本。
 
 ### 选项本地化
 

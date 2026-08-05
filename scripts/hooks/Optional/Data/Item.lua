@@ -48,7 +48,7 @@ end
 function Item:getName()     return Game:loc("item_"..self.id.."_name") end
 function Item:getUseName()  return Game:loc("item_"..self.id.."_useName") end
 
-local function locChapter(default, key)
+local function locChapter(key)
     local chapter_key = key .. "_chapter_" .. tostring(Game.chapter)
     if Game.hasStr and Game:hasStr(chapter_key) then
         return Game:loc(chapter_key)
@@ -56,8 +56,8 @@ local function locChapter(default, key)
     return Game:loc(key)
 end
 
-function Item:getDescription() return locChapter(self.description, "item_"..self.id.."_description") end
-function Item:getBattleDescription() return locChapter(self.effect, "item_"..self.id.."_effect") end
+function Item:getDescription() return locChapter("item_"..self.id.."_description") end
+function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect") end
 function Item:getCheck() return Game:loc("item_"..self.id.."_check") end
 
 function Item:getShopDescription()
