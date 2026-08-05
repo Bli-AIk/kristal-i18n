@@ -588,13 +588,7 @@ local function getTextId(value)
         return nil
     end
 
-    if value.id ~= nil then
-        return value.id
-    end
-    if value.loc_id ~= nil then
-        return value.loc_id
-    end
-    return value.loc
+    return value.id
 end
 
 local function isClassInstance(value)
@@ -1212,8 +1206,6 @@ end
 
 local function ensureLanguageGlobals()
     Game.langAvailable = getLanguageList()
-    -- Keep the original library's misspelled field as an alias for existing hooks/mod code.
-    Game.langAvalable = Game.langAvailable
 
     Game.lang = resolveLanguageId(Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
         or getDefaultLanguage(Game.langAvailable)
@@ -1432,7 +1424,7 @@ local function extractTextDescriptor(value, options)
     end
     for key, item in pairs(value) do
         if key ~= "text" and key ~= "options" and type(key) ~= "number"
-            and key ~= "choices" and key ~= "ids" and key ~= "loc_ids"
+            and key ~= "choices" and key ~= "ids"
         then
             descriptor_options[key] = item
         end
@@ -1442,8 +1434,6 @@ local function extractTextDescriptor(value, options)
     -- normalizeTextChoiceArgs rather than being passed to the textbox.
     if value.ids ~= nil then
         descriptor_options.ids = value.ids
-    elseif value.loc_ids ~= nil then
-        descriptor_options.loc_ids = value.loc_ids
     end
     return value.text, descriptor_options
 end
@@ -1451,8 +1441,7 @@ end
 local function stripTextOptions(options)
     local result = {}
     for key, value in pairs(options or {}) do
-        if key ~= "id" and key ~= "loc_id" and key ~= "loc"
-            and key ~= "ids" and key ~= "loc_ids" and key ~= "var"
+        if key ~= "id" and key ~= "ids" and key ~= "var"
         then
             result[key] = value
         end
@@ -1511,17 +1500,17 @@ local function normalizeChoices(choices, options)
     options = options or {}
 
     if type(choices) == "table" and (choices.choices ~= nil
-        or choices.ids ~= nil or choices.loc_ids ~= nil)
+        or choices.ids ~= nil)
     then
         local descriptor_options = {}
         for key, value in pairs(choices) do
-            if key ~= "choices" and key ~= "ids" and key ~= "loc_ids"
+            if key ~= "choices" and key ~= "ids"
                 and type(key) ~= "number"
             then
                 descriptor_options[key] = value
             end
         end
-        descriptor_options.ids = choices.ids or choices.loc_ids
+        descriptor_options.ids = choices.ids
         options = mergeTextOptions(descriptor_options, options)
         choices = choices.choices
     elseif isTextDescriptor(choices) then
@@ -1532,7 +1521,7 @@ local function normalizeChoices(choices, options)
         choices = choices == nil and {} or { choices }
     end
 
-    local ids = options.ids or options.loc_ids
+    local ids = options.ids
     if type(ids) == "string" then
         ids = { ids }
     end
