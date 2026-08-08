@@ -1309,7 +1309,7 @@ end
 
 local function ensureNameLanguageGlobals()
     Game.langNameLanguages = getNameLanguageList()
-    local requested = Game.langNameLanguage
+    local requested = getConfig("defaultNameLanguage") or Game.langNameLanguage
         or getConfig("defaultNameLanguage")
         or Game.lang
     Game.langNameLanguage = matchAvailableLanguage(
@@ -2638,6 +2638,9 @@ function kristalI18n:registerDebugOptions(debug_system)
 end
 
 function kristalI18n:postInit()
+    -- Re-evaluate the name language now that the mod config and Game exist
+    -- (at init time the config/Game were not available and it fell back to EN).
+    ensureNameLanguageGlobals()
     ensureLanguageGlobals()
     Game:loadLang(Game.lang)
 
