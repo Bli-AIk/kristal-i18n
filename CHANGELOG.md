@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.1...v0.4.0) (2026-08-08)
+
+
+### Features
+
+* localize debug item menu and item text ([27d3ba8](https://github.com/Bli-AIk/kristal-i18n/commit/27d3ba839efd125ba398afdbce2afa8b7f5e8250))
+
 ## [0.3.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.0...v0.3.1) (2026-08-08)
 
 
