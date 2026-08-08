@@ -1309,7 +1309,11 @@ end
 
 local function ensureNameLanguageGlobals()
     Game.langNameLanguages = getNameLanguageList()
-    local requested = getConfig("defaultNameLanguage") or Game.langNameLanguage
+    -- The player's current choice (set via setNameLanguage or restored from the
+    -- save file) takes precedence; the config default only applies when no
+    -- choice has been made yet. Giving the config priority here would clobber
+    -- the player's selection on every recompute (e.g. any Game:loc call).
+    local requested = Game.langNameLanguage
         or getConfig("defaultNameLanguage")
         or Game.lang
     Game.langNameLanguage = matchAvailableLanguage(
@@ -2638,8 +2642,12 @@ function kristalI18n:registerDebugOptions(debug_system)
 end
 
 function kristalI18n:postInit()
-    -- Re-evaluate the name language now that the mod config and Game exist
-    -- (at init time the config/Game were not available and it fell back to EN).
+    -- At init time the mod config wasn't available yet, so the name language
+    -- fell back to EN (not a player choice). Now that the config is usable,
+    -- drop that fallback so the config default (defaultNameLanguage) applies
+    -- to fresh saves; a player choice made later via setNameLanguage (or a
+    -- value restored from the save file in :load) still takes precedence.
+    Game.langNameLanguage = nil
     ensureNameLanguageGlobals()
     ensureLanguageGlobals()
     Game:loadLang(Game.lang)
