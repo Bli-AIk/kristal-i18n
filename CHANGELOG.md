@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.0...v0.3.1) (2026-08-08)
+
+
+### chore
+
+* force release 0.3.1 ([e2ec07c](https://github.com/Bli-AIk/kristal-i18n/commit/e2ec07cb59672a925a30ecbfea9a348a2f75b6ca))
+
+
+### Features
+
+* **i18n:** map/tileset texture variants (refreshLocalizedTilesets, lang/ probe hardening, RC2 base-id fix) ([b12da82](https://github.com/Bli-AIk/kristal-i18n/commit/b12da82ab67a3397bcba01f1199e4e80640671c4))
+
+
+### Bug Fixes
+
+* **i18n:** name language player choice no longer clobbered by config default ([ef7b938](https://github.com/Bli-AIk/kristal-i18n/commit/ef7b93847630d662a105dc92af1c936b2c80a0f5))
+* **i18n:** re-evaluate name language at postInit; config defaultNameLanguage takes precedence ([e7d8a5d](https://github.com/Bli-AIk/kristal-i18n/commit/e7d8a5d12f3a67d91fb45ae15a63ca2c855dbaf5))
+
 ## [0.3.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.2.0...v0.3.0) (2026-08-08)
 
 
