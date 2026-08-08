@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.2.0...v0.3.0) (2026-08-08)
+
+
+### Features
+
+* **i18n:** raw-string lookup with per-line fallback, CJK wrap, bonus names +7, framework light/dark item keys ([82e8312](https://github.com/Bli-AIk/kristal-i18n/commit/82e8312f096dab9090bba2e6162787da8be3f0d0))
+
+
+### Bug Fixes
+
+* **i18n:** remove misspelled 'raisel' name entry ([786ecf8](https://github.com/Bli-AIk/kristal-i18n/commit/786ecf8fbffcc038227a43c3653a99ae8063c587))
+
 ## [0.2.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.1.1...v0.2.0) (2026-08-05)
 
 
