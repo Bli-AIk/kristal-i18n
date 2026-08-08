@@ -561,6 +561,79 @@ local function addCjkTextSpacing(text, spacing_value, offset_y)
     return table.concat(out)
 end
 
+-- Hometown Pack extension: wrap over-long CJK dialogue lines at natural
+-- punctuation boundaries, so the engine's latin-word auto-wrap never kicks in.
+local function utf8Chars(s)
+    local chars = {}
+    local i = 1
+    while i <= #s do
+        local b = s:byte(i)
+        local len
+        if b < 0x80 then len = 1
+        elseif b < 0xE0 then len = 2
+        elseif b < 0xF0 then len = 3
+        elseif b < 0xF8 then len = 4
+        else len = 1 end
+        chars[#chars + 1] = s:sub(i, i + len - 1)
+        i = i + len
+    end
+    return chars
+end
+
+local function wrapCjkText(text, limit)
+    if type(text) ~= "string" or Game.lang ~= "zh_hans" or not hasCjkText(text) then
+        return text
+    end
+    limit = limit or 19
+    local out_lines = {}
+    for line in text:gmatch("[^\n]+") do
+        local chars = utf8Chars(line)
+        local cur, cur_core = {}, 0
+        local i = 1
+        while i <= #chars do
+            local c = chars[i]
+            if c == "[" then
+                local close = line:find("]", i, true)
+                if close then
+                    cur[#cur + 1] = line:sub(i, close)
+                    i = close + 1
+                else
+                    cur[#cur + 1] = c
+                    i = i + 1
+                end
+            else
+                cur[#cur + 1] = c
+                if c ~= "*" and c ~= " " then
+                    cur_core = cur_core + 1
+                end
+                if c:match("[，。！？、；：—]") and cur_core >= 12 then
+                    out_lines[#out_lines + 1] = table.concat(cur)
+                    cur, cur_core = {}, 0
+                elseif cur_core >= limit then
+                    out_lines[#out_lines + 1] = table.concat(cur)
+                    cur, cur_core = {}, 0
+                end
+                i = i + 1
+            end
+        end
+        if #cur > 0 then
+            out_lines[#out_lines + 1] = table.concat(cur)
+        end
+    end
+    return table.concat(out_lines, "\n")
+end
+
+local function wrapCjkTextValue(value, limit)
+    if type(value) == "table" then
+        local out = {}
+        for key, item in pairs(value) do
+            out[key] = wrapCjkTextValue(item, limit)
+        end
+        return out
+    end
+    return wrapCjkText(value, limit)
+end
+
 local function addCjkTextSpacingValue(value, spacing_value, offset_y)
     if type(value) == "table" then
         if type(isClass) == "function" and isClass(value) then
@@ -833,7 +906,36 @@ local function localizeStaticTextValue(value)
         end
         return out
     end
-    return localizeStaticText(value)
+    local static = localizeStaticText(value)
+    -- Raw-string dictionary lookup, so that mod dialogue/shop/battle strings
+    -- are translated without changing call sites.
+    if type(static) == "string" and Game and Game.lang == "zh_hans" then
+        if Game:hasStr(static) then
+            return Game:loc(static)
+        end
+        -- Combined messages (e.g. World:heal prefixes): localize line by line.
+        if static:find("\n", 1, true) then
+            local out = {}
+            local matched = false
+            for line in static:gmatch("[^\n]+") do
+                line = line:gsub("%s+$", "")
+                local localized = localizeStaticTextValue(line)
+                if localized ~= line then
+                    matched = true
+                end
+                out[#out + 1] = localized
+            end
+            if matched then
+                return table.concat(out, "\n")
+            end
+        end
+        -- Dynamic messages (e.g. heal amount) via pattern.
+        local recovered = static:match("^%* You recovered (%d+) HP!$")
+        if recovered then
+            return Game:loc("heal_recovered", { amount = recovered })
+        end
+    end
+    return static
 end
 
 local LIGHT_MENU_STATIC_TEXT_IDS = {
@@ -1661,6 +1763,13 @@ local POWER_STAT_LABELS = {
 
 local ITEM_BONUS_NAMES = {
     ["GrazeTime"] = "graze_time_bonus",
+    ["Money Earned UP"] = "bonus_money_up",
+    ["Spookiness UP"] = "bonus_spookiness_up",
+    ["Defense"] = "bonus_defense",
+    ["Festive"] = "bonus_festive",
+    ["Annoying"] = "bonus_annoying",
+    ["SlayDark"] = "bonus_slaydark",
+    ["$ +5%"] = "bonus_money_5",
 }
 
 local NOELLE_SPECIAL_TITLE_KEYS = {
@@ -2597,6 +2706,7 @@ function kristalI18n:postInit()
     HookSystem.hook(Text, "setText", function(orig, self, text)
         text = resolveTextInput(text)
         text = localizeStaticTextValue(text)
+        text = wrapCjkTextValue(text)
         return orig(self, addCjkTextSpacingValue(text, cjkFixedTextSpacing))
     end)
 
@@ -3207,6 +3317,7 @@ function Game:locText(text, var)
 end
 
 function Game:locRaw(id)
+
     if Game.langStr and Game.langStr[id] ~= nil then
         return Game.langStr[id]
     end
