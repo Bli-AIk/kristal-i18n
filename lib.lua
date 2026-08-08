@@ -705,6 +705,166 @@ end
 
 local localizeDebugPatternText
 
+-- The debug item menu receives raw item fields instead of calling the Item
+-- accessors. Keep a lookup for those fields so framework items use the same
+-- translations as the inventory and battle menus.
+local itemTextLookup = {}
+local itemTextLookupBuilt = false
+local itemTextLookupRegistry = nil
+local itemTextLookupCount = 0
+
+local function getItemTextVariantSuffix(item)
+    if item and item.id == "dark_candy" and item.name == "Darker Candy" then
+        return "_darker"
+    end
+    return ""
+end
+
+local function addItemTextLookup(value, id, field, suffix)
+    if type(value) ~= "string" or value == "" then
+        return
+    end
+
+    local entries = itemTextLookup[value]
+    if not entries then
+        entries = {}
+        itemTextLookup[value] = entries
+    end
+
+    for _, entry in ipairs(entries) do
+        if entry.id == id and entry.field == field and entry.suffix == suffix then
+            return
+        end
+    end
+
+    table.insert(entries, {
+        id = id,
+        field = field,
+        suffix = suffix,
+    })
+end
+
+local function buildItemTextLookup()
+    if not Registry or type(Registry.items) ~= "table" then
+        return
+    end
+
+    local item_count = 0
+    for _ in pairs(Registry.items) do
+        item_count = item_count + 1
+    end
+
+    if itemTextLookupBuilt
+        and itemTextLookupRegistry == Registry.items
+        and itemTextLookupCount == item_count
+    then
+        return
+    end
+
+    itemTextLookup = {}
+    itemTextLookupBuilt = item_count > 0
+    itemTextLookupRegistry = Registry.items
+    itemTextLookupCount = item_count
+
+    for registry_id, item_data in pairs(Registry.items) do
+        -- Registry entries are usually callable class tables, though
+        -- extensions may register plain factory functions as well.
+        if type(item_data) == "function" or type(item_data) == "table" then
+            local ok, item = pcall(item_data)
+            if ok and item then
+                local id = tostring(item.id or registry_id)
+                local suffix = getItemTextVariantSuffix(item)
+                addItemTextLookup(item.name, id, "name", suffix)
+                addItemTextLookup(item.description, id, "description", suffix)
+            end
+        end
+    end
+end
+
+local function getItemTextLocalizationKey(text, field, preferred_id)
+    if type(text) ~= "string" or type(field) ~= "string" or not Game then
+        return nil
+    end
+
+    buildItemTextLookup()
+
+    local entries = itemTextLookup[text]
+    if not entries then
+        return nil
+    end
+
+    local function findKey(entry)
+        if entry.field ~= field or (preferred_id and entry.id ~= preferred_id) then
+            return nil
+        end
+
+        local base = "item_" .. entry.id .. "_" .. field
+        local chapter = tostring(Game.chapter or "")
+        local suffix = entry.suffix or ""
+
+        if chapter ~= "" and suffix ~= "" then
+            local key = base .. "_chapter_" .. chapter .. suffix
+            if Game:hasStr(key) then
+                return key, entry.id
+            end
+        end
+
+        if chapter ~= "" then
+            local key = base .. "_chapter_" .. chapter
+            if Game:hasStr(key) then
+                return key, entry.id
+            end
+        end
+
+        if suffix ~= "" then
+            local key = base .. suffix
+            if Game:hasStr(key) then
+                return key, entry.id
+            end
+        end
+
+        if Game:hasStr(base) then
+            return base, entry.id
+        end
+
+        return nil
+    end
+
+    if preferred_id then
+        for _, entry in ipairs(entries) do
+            local key = findKey(entry)
+            if key then
+                return key, entry.id
+            end
+        end
+    end
+
+    for _, entry in ipairs(entries) do
+        local key = findKey(entry)
+        if key then
+            return key, entry.id
+        end
+    end
+end
+
+local function localizeRawItemText(text, field, preferred_id)
+    local key = getItemTextLocalizationKey(text, field, preferred_id)
+    return key and Game:loc(key) or nil
+end
+
+local function localizeItemField(item, field)
+    if not item then
+        return nil
+    end
+
+    local raw = item[field]
+    if type(raw) ~= "string" then
+        return raw
+    end
+
+    return localizeRawItemText(raw, field, item.id) or raw
+end
+
 local function localizeStaticText(text)
     if type(text) ~= "string" or not Game or Game.lang ~= "zh_hans" then
         return text
@@ -742,6 +902,11 @@ local function localizeStaticText(text)
                 end
             end
         end
+    end
+
+    if not localized then
+        localized = localizeRawItemText(text, "name")
+            or localizeRawItemText(text, "description")
     end
 
     return applyOriginalDebugTermReplacements(localized or text)
@@ -794,7 +959,9 @@ localizeDebugPatternText = function(text)
 
     local item_name = text:match("^(.*) %(Light Item%)$")
     if item_name then
-        return Game:loc("debug_light_item_suffix", { name = item_name })
+        return Game:loc("debug_light_item_suffix", {
+            name = localizeRawItemText(item_name, "name") or item_name
+        })
     end
 
     local wave_count = text:match("^Remove this wave from the selected group%. (%(.+%))$")
@@ -918,9 +1085,9 @@ local function localizeStaticTextValue(value)
             local out = {}
             local matched = false
             for line in static:gmatch("[^\n]+") do
-                line = line:gsub("%s+$", "")
-                local localized = localizeStaticTextValue(line)
-                if localized ~= line then
+                local trimmed_line = line:gsub("%s+$", "")
+                local localized = localizeStaticTextValue(trimmed_line)
+                if localized ~= trimmed_line then
                     matched = true
                 end
                 out[#out + 1] = localized
@@ -2045,6 +2212,43 @@ local function resolveDisplayText(value, options)
     return localizeStaticTextValue(resolveTextInput(value, options))
 end
 
+local function localizeDebugItemOption(name, description)
+    if not Game or Game.lang ~= "zh_hans" then
+        return resolveDisplayText(name), localizeDynamicStaticTextValue(description)
+    end
+
+    local raw_name
+    if type(name) == "string" then
+        raw_name = name:match("^(.*) %(Light Item%)$") or name
+    end
+
+    -- Descriptions distinguish framework items that intentionally share a name
+    -- (for example, the Light and Dark BlackShard entries).
+    local item_id
+    if type(description) == "string" then
+        local _, description_id = getItemTextLocalizationKey(description, "description")
+        item_id = description_id
+    end
+    if not item_id and raw_name then
+        local _, name_id = getItemTextLocalizationKey(raw_name, "name")
+        item_id = name_id
+    end
+
+    if not item_id then
+        return resolveDisplayText(name), localizeDynamicStaticTextValue(description)
+    end
+
+    local localized_name = raw_name and localizeRawItemText(raw_name, "name", item_id) or nil
+    if localized_name and raw_name ~= name then
+        localized_name = Game:loc("debug_light_item_suffix", { name = localized_name })
+    end
+    localized_name = localized_name or resolveDisplayText(name)
+
+    local localized_description = localizeRawItemText(description, "description", item_id)
+        or localizeStaticTextValue(description)
+    return localized_name, localizeDynamicStaticTextValue(localized_description)
+end
+
 local function resolveTextLines(value)
     value = resolveDisplayText(value)
     if type(value) ~= "table" then
@@ -2191,6 +2395,50 @@ local function hookMethod(target, name, hook)
     if target and type(target[name]) == "function" then
         HookSystem.hook(target, name, hook)
     end
+end
+
+local function hookDebugSystemLocalization()
+    if kristalI18n.debug_system_localization_hooked or not DebugSystem then
+        return
+    end
+
+    kristalI18n.debug_system_localization_hooked = true
+
+    HookSystem.hook(DebugSystem, "registerOption", function(orig, self, menu, name, description, func, visible_func, color)
+        if menu == "give_item" then
+            name, description = localizeDebugItemOption(name, description)
+        else
+            name = resolveDisplayText(name)
+            description = localizeDynamicStaticTextValue(description)
+        end
+        return orig(
+            self,
+            menu,
+            name,
+            description,
+            func,
+            visible_func,
+            color
+        )
+    end)
+
+    hookMethod(DebugSystem, "registerMenu", function(orig, self, id, name, type)
+        return orig(self, id, resolveDisplayText(name), type)
+    end)
+
+    HookSystem.hook(DebugSystem, "appendBool", function(orig, self, desc, bool)
+        if Game.lang == "zh_hans" then
+            return Game:loc("debug_bool_suffix", {
+                desc = resolveDisplayText(desc),
+                state = Game:loc(bool and "on" or "off")
+            })
+        end
+        return orig(self, resolveDisplayText(desc), bool)
+    end)
+
+    HookSystem.hook(DebugSystem, "printShadow", function(orig, self, text, ...)
+        return orig(self, resolveDisplayText(text), ...)
+    end)
 end
 
 local function hookFrameworkLocalization()
@@ -2430,6 +2678,25 @@ local function applyItemLocalizationPatch(item)
 
     item.__langlib_zh_localized = true
 
+    if item.id == "dark_candy" then
+        local original_get_name = item.getName
+        local original_get_description = item.getDescription
+
+        function item:getName()
+            if Game and Game.lang == "zh_hans" then
+                return localizeItemField(self, "name")
+            end
+            return original_get_name(self)
+        end
+
+        function item:getDescription()
+            if Game and Game.lang == "zh_hans" then
+                return localizeItemField(self, "description")
+            end
+            return original_get_description(self)
+        end
+    end
+
     if item.id == "glowshard" then
         local original_get_battle_text = item.getBattleText
         function item:getBattleText(user, target)
@@ -2593,6 +2860,7 @@ end
 function kristalI18n:init()
     loadCjkConfig()
     ensureLanguageGlobals()
+    hookDebugSystemLocalization()
     hookRegistryItemCreation()
     hookFrameworkLocalization()
 end
@@ -2917,39 +3185,8 @@ function kristalI18n:postInit()
         end)
     end
 
-    if DebugSystem then
-        HookSystem.hook(DebugSystem, "registerOption", function(orig, self, menu, name, description, func, visible_func, color)
-            return orig(
-                self,
-                menu,
-                resolveDisplayText(name),
-                localizeDynamicStaticTextValue(description),
-                func,
-                visible_func,
-                color
-            )
-        end)
-
-        hookMethod(DebugSystem, "registerMenu", function(orig, self, id, name, type)
-            return orig(self, id, resolveDisplayText(name), type)
-        end)
-
-        HookSystem.hook(DebugSystem, "appendBool", function(orig, self, desc, bool)
-            if Game.lang == "zh_hans" then
-                return Game:loc("debug_bool_suffix", {
-                    desc = resolveDisplayText(desc),
-                    state = Game:loc(bool and "on" or "off")
-                })
-            end
-            return orig(self, resolveDisplayText(desc), bool)
-        end)
-
-        HookSystem.hook(DebugSystem, "printShadow", function(orig, self, text, ...)
-            return orig(self, resolveDisplayText(text), ...)
-        end)
-
-        refreshDebugOptionDescriptions()
-    end
+    hookDebugSystemLocalization()
+    refreshDebugOptionDescriptions()
 
     hookMethod(Draw, "printShadow", function(orig, text, ...)
         return orig(resolveDisplayText(text), ...)
