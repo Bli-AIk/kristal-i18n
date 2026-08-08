@@ -1702,8 +1702,97 @@ local function refreshCachedEngineFonts()
     end
 end
 
+-- Restore the base asset id by stripping any number of "lang/<segment>/" prefixes.
+local function getBaseAssetId(path)
+    while true do
+        local stripped = path:match("^lang/[^/]+/(.+)$")
+        if not stripped then
+            return path
+        end
+        path = stripped
+    end
+end
+
+-- Tileset instance -> whole-image base id. Captured once from the ORIGINAL
+-- texture (never derived from an already-localized one, so switching back
+-- to the base language can't get stuck in lang/lang nesting).
+local localized_tileset_image_ids = {}
+
+-- Re-resolve cached Tileset textures for the current language.
+local function refreshLocalizedTilesets()
+    if not Registry or not Registry.tilesets then
+        return
+    end
+
+    local tilesets = {}
+    for _, tileset in pairs(Registry.tilesets) do
+        tilesets[tileset] = true
+    end
+    if Game and Game.world and Game.world.map and Game.world.map.tilesets then
+        for _, tileset in ipairs(Game.world.map.tilesets) do
+            tilesets[tileset] = true
+        end
+    end
+
+    for tileset in pairs(tilesets) do
+        -- Per-tile images (tsx <tile><image>): info.path is always the base id.
+        for _, info in pairs(tileset.tile_info or {}) do
+            if info and info.path then
+                local texture = Assets.getTexture(info.path)
+                if texture then
+                    local old_w, old_h = info.texture:getWidth(), info.texture:getHeight()
+                    info.texture = texture
+                    if info.quad and (old_w ~= texture:getWidth() or old_h ~= texture:getHeight()) then
+                        info.quad = love.graphics.newQuad(
+                            info.x or 0, info.y or 0,
+                            info.width or texture:getWidth(), info.height or texture:getHeight(),
+                            texture:getWidth(), texture:getHeight())
+                    end
+                end
+            end
+        end
+
+        -- Whole-image tilesets (tsx <image>).
+        if tileset.texture then
+            local base_id = localized_tileset_image_ids[tileset]
+            if not base_id then
+                base_id = getBaseAssetId(Assets.getTextureID(tileset.texture) or "")
+                if base_id ~= "" then
+                    localized_tileset_image_ids[tileset] = base_id
+                end
+            end
+            if base_id and base_id ~= "" then
+                local texture = Assets.getTexture(base_id)
+                if texture then
+                    local old_w, old_h = tileset.texture:getWidth(), tileset.texture:getHeight()
+                    tileset.texture = texture
+                    if old_w ~= texture:getWidth() or old_h ~= texture:getHeight() then
+                        tileset.quads = {}
+                        local tw, th = texture:getWidth(), texture:getHeight()
+                        for i = 0, tileset.tile_count - 1 do
+                            local tx = tileset.margin + (i % tileset.columns) * (tileset.tile_width + tileset.spacing)
+                            local ty = tileset.margin + math.floor(i / tileset.columns) * (tileset.tile_height + tileset.spacing)
+                            tileset.quads[i] = love.graphics.newQuad(tx, ty, tileset.tile_width, tileset.tile_height, tw, th)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 local function refreshLocalizedAssets()
     refreshCachedEngineFonts()
+
+    -- Tileset caches (created before the Assets hooks were installed).
+    refreshLocalizedTilesets()
+
+    -- Tile layers hold a SpriteBatch over the old tileset texture; rebuild on next draw.
+    if Game and Game.world and Game.world.map then
+        for _, layer in ipairs(Game.world.map.tile_layers or {}) do
+            layer:markTilesDirty()
+        end
+    end
 
     if not Game or not Game.stage then
         return
@@ -1711,7 +1800,9 @@ local function refreshLocalizedAssets()
 
     for _, sprite in pairs(Game.stage:getObjects(Sprite)) do
         if sprite.texture_path then
-            local texture = Assets.getTexture(sprite.texture_path)
+            -- Strip any lang/ prefix first so switching back to the base
+            -- language resolves correctly.
+            local texture = Assets.getTexture(getBaseAssetId(sprite.texture_path))
             if texture then
                 sprite.texture = texture
             end
@@ -1733,12 +1824,29 @@ local function getLocalizedTexturePaths(path)
         return {}
     end
 
-    local lang = Game.lang or FALLBACK_LANGUAGE
-    local name_language = Game.langNameLanguage or lang
-    local paths = {
-        "lang/" .. lang .. "/" .. name_language .. "/" .. path,
-        "lang/" .. lang .. "/" .. path,
-    }
+    -- Already-localized id: never nest another lang/ prefix.
+    if path:sub(1, 5) == "lang/" then
+        return {}
+    end
+
+    -- Game may not exist yet if hooks are ever installed earlier; nil-guard.
+    local lang = Game and Game.lang or FALLBACK_LANGUAGE
+    local name_language = Game and Game.langNameLanguage or lang
+
+    -- Prefer the original path; also try stripping a sprites/ prefix
+    -- (defensive: tmx-derived ids are prefix-free in v0.10.0, but mods
+    -- may hand-write such ids).
+    local variants = { path }
+    local stripped = path:match("^assets/sprites/(.+)$") or path:match("^sprites/(.+)$")
+    if stripped then
+        variants[#variants + 1] = stripped
+    end
+
+    local paths = {}
+    for _, variant in ipairs(variants) do
+        paths[#paths + 1] = "lang/" .. lang .. "/" .. name_language .. "/" .. variant
+        paths[#paths + 1] = "lang/" .. lang .. "/" .. variant
+    end
 
     return paths
 end
