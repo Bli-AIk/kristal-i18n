@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.2](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.1...v0.3.2) (2026-08-09)
+
+
+### chore
+
+* force release 0.3.2 ([25cf3e0](https://github.com/Bli-AIk/kristal-i18n/commit/25cf3e04f8637db354500b1878852029eb3dbe2d))
+
+
+### Features
+
+* localize debug item menu and item text ([27d3ba8](https://github.com/Bli-AIk/kristal-i18n/commit/27d3ba839efd125ba398afdbce2afa8b7f5e8250))
+
+
+### Bug Fixes
+
+* complete item reaction translations ([2e97b88](https://github.com/Bli-AIk/kristal-i18n/commit/2e97b88f259e1d31c951adf7551f6709c616786a))
+* handle CJK wrap punctuation by codepoint ([a622046](https://github.com/Bli-AIk/kristal-i18n/commit/a622046a21c491276844ebaa2ed850f9ad02e51b))
+* localize tea reaction and equipment tags ([aacc358](https://github.com/Bli-AIk/kristal-i18n/commit/aacc35808860ffb2a833689e3ab03df16ffda41f))
+
 ## [0.3.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.0...v0.3.1) (2026-08-08)
 
 
