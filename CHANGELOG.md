@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.3](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.2...v0.3.3) (2026-08-09)
+
+
+### Bug Fixes
+
+* localize shop item descriptions ([7d13258](https://github.com/Bli-AIk/kristal-i18n/commit/7d13258a21f13e255b48ae7f3245914e4cd6b982))
+
 ## [0.3.2](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.1...v0.3.2) (2026-08-09)
 
 
