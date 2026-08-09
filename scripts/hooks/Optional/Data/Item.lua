@@ -71,17 +71,37 @@ end
 
 function Item:getReaction(user_id, reactor_id)
     local reactions = self:getReactions()
-    if reactions[user_id] then
-        if type(reactions[user_id]) == "string" then
-            if reactor_id == user_id then
-                return Game:loc("item_"..self.id.."_"..user_id.."Reaction") -- item_darkburger_krisReaction
-            else
-                return nil
-            end
-        else
-            return Game:loc("item_"..self.id.."_"..user_id.."/"..reactor_id.."Reaction") -- item_darkburger_kris/ralseiReaction
-        end
+    local user_reaction = reactions[user_id]
+    if not user_reaction then
+        return nil
     end
+
+    local reaction
+    local key = "item_"..self.id
+    if self.reaction_variants and Game.save_id ~= nil then
+        key = key.."_variant_"..tostring(Game.save_id)
+    end
+
+    if type(user_reaction) == "string" then
+        if reactor_id ~= user_id then
+            return nil
+        end
+        reaction = user_reaction
+        key = key.."_"..user_id.."Reaction"
+    else
+        reaction = user_reaction[reactor_id]
+        key = key.."_"..user_id.."/"..reactor_id.."Reaction"
+    end
+
+    if not reaction then
+        return nil
+    end
+
+    -- Keep framework text when a source string has no authoritative translation.
+    if Game.hasStr and Game:hasStr(key) then
+        return Game:loc(key)
+    end
+    return reaction
 end
 
 function Item:getTypeName()
