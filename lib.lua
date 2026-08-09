@@ -1212,6 +1212,66 @@ local function hookLightMenuDraw(menu_class)
     end)
 end
 
+local SHOP_STATIC_TEXT_IDS = {
+    ["Buy"] = "shop_buy",
+    ["Sell"] = "shop_sell",
+    ["Talk"] = "shop_talk",
+    ["Exit"] = "shop_exit",
+    ["Return"] = "shop_return",
+    ["Yes"] = "shop_yes",
+    ["No"] = "shop_no",
+    ["Sell Items"] = "shop_sell_items",
+    ["Sell Weapons"] = "shop_sell_weapons",
+    ["Sell Armor"] = "shop_sell_armor",
+    ["Sell Pocket Items"] = "shop_sell_pocket_items",
+}
+
+local function localizeShopText(text)
+    if isTextDescriptor(text) then
+        text = resolveTextInput(text)
+    end
+
+    if type(text) ~= "string" or Game.lang ~= "zh_hans" then
+        return text
+    end
+
+    local id = SHOP_STATIC_TEXT_IDS[text]
+    if id then
+        return Game:loc(id)
+    end
+
+    if text == "--SOLD OUT--" then
+        return "--" .. Game:loc("shop_sold_out") .. "--"
+    end
+
+    return localizeStaticTextValue(resolveTextInput(text))
+end
+
+local function hookShopDraw(shop_class)
+    if not shop_class then
+        return
+    end
+
+    HookSystem.hook(shop_class, "draw", function(orig, self, ...)
+        local original_print = love.graphics.print
+        love.graphics.print = function(text, ...)
+            return original_print(localizeShopText(text), ...)
+        end
+
+        local draw_args = {...}
+        local unpack_args = table.unpack or unpack
+        local ok, result = xpcall(function()
+            return orig(self, unpack_args(draw_args))
+        end, debug.traceback)
+        love.graphics.print = original_print
+
+        if not ok then
+            error(result)
+        end
+        return result
+    end)
+end
+
 local function localizeDynamicStaticTextValue(value)
     if type(value) == "function" then
         return function(...)
@@ -2666,6 +2726,28 @@ local function hookFrameworkLocalization()
             return orig(self, resolveDisplayText(text), no_voice)
         end)
 
+        local function hookShopConfirmationDraw(method, field)
+            hookMethod(Shop, method, function(orig, self, ...)
+                local original_text = self[field]
+                self[field] = resolveDisplayText(original_text)
+
+                local draw_args = {...}
+                local unpack_args = table.unpack or unpack
+                local ok, result = xpcall(function()
+                    return orig(self, unpack_args(draw_args))
+                end, debug.traceback)
+                self[field] = original_text
+
+                if not ok then
+                    error(result)
+                end
+                return result
+            end)
+        end
+
+        hookShopConfirmationDraw("drawBuyConfirm", "buy_confirmation_text")
+        hookShopConfirmationDraw("drawSellConfirm", "sell_confirmation_text")
+
         hookMethod(Shop, "registerItem", function(orig, self, item, options)
             return orig(self, item, resolveShopItemOptions(options))
         end)
@@ -2706,6 +2788,27 @@ local function applyItemLocalizationPatch(item)
     end
 
     item.__langlib_zh_localized = true
+
+    -- Some framework items override getShopDescription, so localize those
+    -- overrides through the same per-item shop keys as the base Item method.
+    local original_get_shop_description = item.getShopDescription
+    if original_get_shop_description then
+        function item:getShopDescription()
+            local key = "item_" .. self.id .. "_shopDesc"
+            if Game and Game.hasStr and Game:hasStr(key) then
+                local shop_name_key = "item_" .. self.id .. "_shopName"
+                local shop_name = self.shop
+                if Game:hasStr(shop_name_key) then
+                    shop_name = Game:loc(shop_name_key)
+                end
+                return Game:loc(key, {
+                    typeName = self:getTypeName(),
+                    shopName = shop_name,
+                })
+            end
+            return original_get_shop_description(self)
+        end
+    end
 
     if item.id == "dark_candy" then
         local original_get_name = item.getName
@@ -3069,6 +3172,7 @@ function kristalI18n:postInit()
     hookLightMenuDraw(LightStatMenu)
     hookLightMenuDraw(LightItemMenu)
     hookLightMenuDraw(LightCellMenu)
+    hookShopDraw(Shop)
 
     if GonerChoice then
         HookSystem.hook(GonerChoice, "init", function(orig, self, x, y, choices, on_complete, on_select)
