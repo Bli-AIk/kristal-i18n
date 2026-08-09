@@ -580,6 +580,18 @@ local function utf8Chars(s)
     return chars
 end
 
+local function isCjkWrapPunctuation(char)
+    local codepoint = utf8.codepoint(char)
+    return codepoint == 0xFF0C
+        or codepoint == 0x3002
+        or codepoint == 0xFF01
+        or codepoint == 0xFF1F
+        or codepoint == 0x3001
+        or codepoint == 0xFF1B
+        or codepoint == 0xFF1A
+        or codepoint == 0x2014
+end
+
 local function wrapCjkText(text, limit)
     if type(text) ~= "string" or Game.lang ~= "zh_hans" or not hasCjkText(text) then
         return text
@@ -606,7 +618,7 @@ local function wrapCjkText(text, limit)
                 if c ~= "*" and c ~= " " then
                     cur_core = cur_core + 1
                 end
-                if c:match("[，。！？、；：—]") and cur_core >= 12 then
+                if isCjkWrapPunctuation(c) and cur_core >= 12 then
                     out_lines[#out_lines + 1] = table.concat(cur)
                     cur, cur_core = {}, 0
                 elseif cur_core >= limit then
