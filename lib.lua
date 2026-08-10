@@ -561,7 +561,7 @@ local function addCjkTextSpacing(text, spacing_value, offset_y)
     return table.concat(out)
 end
 
--- Hometown Pack extension: wrap over-long CJK dialogue lines at natural
+-- Hometown Mod extension: wrap over-long CJK dialogue lines at natural
 -- punctuation boundaries, so the engine's latin-word auto-wrap never kicks in.
 local function utf8Chars(s)
     local chars = {}
