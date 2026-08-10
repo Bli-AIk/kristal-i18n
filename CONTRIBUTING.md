@@ -10,7 +10,7 @@ When I built this library, I deliberately did the heavy lifting up front so that
 - **Every hook has already been written.** You don't need to touch a single line of Lua. Every place text shows up is already wired to the localization system.
 - **Simplified Chinese is a complete reference implementation.** `lang/zh_hans.json` covers 100% of the hooked texts and ships with the library, so you always have a full example of what a finished translation looks like.
 
-So what does a translator actually need to do? **Only translate.** Copy the Chinese file, translate the values into your language, register your language in the config — done. Players will be able to switch to it from the in-game settings menu immediately.
+So what does a translator actually need to do? **Only translate.** Copy any existing language file, translate the values into your language, register your language in the config — done. Players will be able to switch to it from the in-game settings menu immediately.
 
 I fully support and welcome pull requests for translations in your language! That's exactly why I created this localization library—to help everyone make games and translate existing ones in their native languages.
 
@@ -18,7 +18,7 @@ I fully support and welcome pull requests for translations in your language! Tha
 
 ## Adding a new language
 
-1. **Copy the reference file.** Copy `lang/zh_hans.json` to `lang/<your_language>.json` (e.g. `lang/fr.json` for French, `lang/ja.json` for Japanese).
+1. **Pick a starting file.** Copy any existing language file to `lang/<your_language>.json` (e.g. `lang/fr.json` for French, `lang/ja.json` for Japanese). `lang/zh_hans.json` is the most complete reference, but you can start from whichever language you read best.
 2. **Translate the values.** Translate every value into your language. Keep the **keys unchanged** — the game looks up text by key, and the keys are shared across all languages.
 3. **Register the language.** In `lib.json` (or via `config.kristalI18n` in your mod's `mod.json`), add your language ID to `languages` and its display name to `languageNames`:
    ```json
