@@ -5,80 +5,100 @@
 <img src="https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
 <img src="https://img.shields.io/badge/Kristal-FF6B35?style=for-the-badge&logo=love2d&logoColor=white" />
 
-![战斗内展示](./screenshot-battle.png)
+![In battle](./screenshot-battle.png)
 
 <details>
-<summary>更多截图（存档页面 / 角色能力 / 调试界面 / 光世界背包）</summary>
+<summary>More screenshots (save screen / ability / debug / light world inventory)</summary>
 
-![存档页面](./screenshot.png)
+![Save screen](./screenshot.png)
 
-![角色能力页面](./screenshot-ability.png)
+![Ability screen](./screenshot-ability.png)
 
-![调试界面](./screenshot-debug.png)
+![Debug screen](./screenshot-debug.png)
 
-![光世界背包](./screenshot-light-inventory.png)
+![Light world inventory](./screenshot-light-inventory.png)
 
 </details>
 
-**kristal-i18n** — Kristal 的多语言本地化库，内置英文与简体中文。
+**kristal-i18n** — a multilingual localization library for Kristal, with English and Simplified Chinese built in.
 
-| 简体中文 | English |
+| English | 简体中文 |
 |---------|---------|
-| 简体中文 | [English](./README_en.md) |
+| English | [简体中文](./README_zh_hans.md) |
 
-## 怎么用
+## Design Goals
 
-三步，完事儿：
+Four features:
 
-**1. 把库装上**
+**1. Simple yet powerful**
 
-把 `libraries/kristal-i18n` 整个目录放进你的模组：
+There is only **one new API** to use day-to-day — `Game:loc`. Everything else is an extension of the vanilla API: write `{key}` in any text and it gets translated; in mixed text, only the braced parts are processed. No new framework to learn, no data structures to restructure — in the vast majority of cases, write it the vanilla way, localize it the same way.
+
+**2. Comprehensive coverage**
+
+Dialogue, cutscenes, choices, built-in items and spells, light/dark world UI, save screen, shop, debug menu, battle... every place text shows up is hooked. The bundled Simplified Chinese localization already achieves all of this, and serves as a complete reference to look at.
+
+**3. Texture localization**
+
+Drop resources under `lang/<language>/...` paths and they replace the vanilla assets per language — sprites, fonts, audio and video alike. Chinese buttons, icons and titles switch over seamlessly, with zero code changes.
+
+**4. Selective name translation**
+
+Mark character names in dialogue with `[name:xxx]` rich text and maintain them per language in `lang/names.json`.
+
+## How to Use
+
+Three steps, done:
+
+**1. Install the library**
+
+Drop the whole `libraries/kristal-i18n` folder into your mod:
 
 ```text
 mods/your_mod/libraries/kristal-i18n/
 ```
 
-**2. 写 JSON**
+**2. Write a JSON**
 
-在模组里建 `lang/<语言>.json`，把要翻译的文本写上：
+Create `lang/<language>.json` in your mod and write the text you want to translate:
 
 ```json
 {
-    "room1.hello": "* 你好！"
+    "room1.hello": "* Hello there!"
 }
 ```
 
-**3. 弄个花括号**
+**3. Use curly braces**
 
-在代码里用 `{key}` 引用它：
+Reference it with `{key}` in your code:
 
 ```lua
 cutscene:text("{room1.hello}")
 ```
 
-完事儿。玩家可以在游戏内**设置菜单**中切换语言（默认 `en` / `zh_hans`）。
+Done. Players can switch languages in the in-game **settings menu** (default `en` / `zh_hans`).
 
-除了花括号，也可以直接调用 `Game:loc`：
+Besides curly braces, you can also call `Game:loc` directly:
 
 ```lua
-Game:loc("room1.hello")                    -- 查表
-Game:loc("room1.hello", {name = "Kris"})   -- 带变量
+Game:loc("room1.hello")                    -- ID lookup
+Game:loc("room1.hello", {name = "Kris"})   -- with variables
 ```
 
-> ⚠️ **API 与原版 LangLib 不兼容**：`Game:loc` 第一个参数永远是 ID，不接受 LangLib 的 `Game:loc("fallback", "id")` 写法。缺失 ID 会显示红色错误标记。
+> ⚠️ **API is NOT compatible with the original LangLib**: the first argument of `Game:loc` is always an ID; LangLib's `Game:loc("fallback", "id")` form is not accepted. Missing IDs render as red error markers.
 
-## 更多技巧
+## More Tips
 
-- **角色名**：`lang/names.json` 里按语言给名字，文本中用 `[name:kris]` 引用
-- **Tiled 对话**：NPC/Interactable 的 `text1`、`text2` 属性直接写 `{key}`
-- **选项**：`cutscene:choicer({"{choice.yes}", "{choice.no}"})`
-- **变量**：文本里写 `[var:name]`，调用时传 `Game:loc("key", {name = "Kris"})`
-- **混合文本**：`cutscene:text("* {name_susie} threw a punch!")` —— 只有花括号里的部分会被翻译
-- **资源覆盖**：字体、贴图、音频放 `lang/<语言>/...` 路径即可自动按语言切换
+- **Names**: define per-language names in `lang/names.json`, reference them with `[name:kris]` in text
+- **Tiled dialogue**: write `{key}` directly in the `text1`/`text2` properties of NPCs/Interactables
+- **Choices**: `cutscene:choicer({"{choice.yes}", "{choice.no}"})`
+- **Variables**: write `[var:name]` in text, pass values via `Game:loc("key", {name = "Kris"})`
+- **Mixed text**: `cutscene:text("* {name_susie} threw a punch!")` — only the braced parts are translated
+- **Asset overrides**: put fonts, sprites, and audio under `lang/<language>/...` paths for automatic per-language switching
 
-## 配置
+## Configuration
 
-默认配置在 `lib.json`，也可在模组的 `mod.json` 中覆盖：
+Defaults live in `lib.json`; override them in your mod's `mod.json`:
 
 ```json
 "config": {
@@ -98,30 +118,34 @@ Game:loc("room1.hello", {name = "Kris"})   -- 带变量
 }
 ```
 
-- `defaultLanguage` — 具体语言 ID 或 `"auto"`（自动检测系统语言并匹配最佳可用语言）；名称语言与文本语言独立
-- `languageToggleKey` — 快捷切换语言的按键；`false` 可禁用
-- `cjk*` — 中文排版微调：字符间固定字间距、对话字间距与垂直偏移、打字机速度倍率。本库为中文特意做了这些调整（英文无需），如需适配其他 CJK 语言或修改观感可覆盖
+- `defaultLanguage` — a specific language ID or `"auto"` (detects the system language and picks the best match); the name language is independent from the text language
+- `languageToggleKey` — the key that quickly toggles the language; set to `false` to disable
+- `cjk*` — fine-tuning for Chinese typesetting: fixed character spacing, dialogue spacing and vertical offset, and typewriter speed multiplier. These adjustments exist specifically for Chinese (not needed for English); override them to fit other CJK languages or tweak the look
 
-## 上游来源与参考
+## Upstream & References
 
-本库的 hook 骨架与预置 ID 模式继承自 GameBanana 的 [LangLib](https://gamebanana.com/mods/627141)（API 不兼容，见上文警告），并参考了以下汉化项目：
+This library's hook skeleton and preset ID patterns are inherited from [LangLib](https://gamebanana.com/mods/627141) on GameBanana (API-incompatible, see the warning above), and references the following Chinese localization projects:
 
-本库内置的中文贴图使用了 [好人汉化组（Goodman 3 Localization Group | UNDERTALE & DELTARUNE Chinese Localization）](https://github.com/gm3dr/) 的贴图。
+The bundled Chinese texture overrides use texture assets from [Goodman 3 Localization Group | UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/).
 
-| 项目 | 作者/组织 |
-|------|-----------|
+| Project | Author/Organization |
+|---------|---------------------|
 | [LangLib](https://gamebanana.com/mods/627141) | Elioze |
-| [DELTARUNE: Frostveil（三角符文：冰封帷幕）](https://www.bilibili.com/video/BV12nQKB9E3V) 和 [Frozen Heart（冰封之心）](https://www.bilibili.com/video/BV18CC4Y6EFo) 汉化 | [WasneetPotato](https://space.bilibili.com/1641628190) |
-| [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [好人汉化组（Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization）](https://github.com/gm3dr/) |
-| 中文 fork | AIk |
+| [DELTARUNE: Frostveil](https://www.bilibili.com/video/BV12nQKB9E3V) and [Frozen Heart](https://www.bilibili.com/video/BV18CC4Y6EFo) localization | [WasneetPotato](https://space.bilibili.com/1641628190) |
+| [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/) |
+| Chinese fork | AIk |
 
-## 参与贡献
+## Contributing
 
-欢迎提交 Issue 或 Pull Request。
+Issues and Pull Requests are welcome.
 
-## 许可证
+I fully support and welcome pull requests for translations in your language! That's exactly why I created this localization library—to help everyone make games and translate existing ones in their native languages.
 
-本项目采用双许可证授权，您可以选择以下任一许可证：
+This library focuses on the **framework's built-in texts**. For a step-by-step guide on adding a new language, see the [English guide](CONTRIBUTING.md) or the [简体中文指南](CONTRIBUTING_zh_hans.md). To translate the vanilla template content (the demo mod), see the [kristal-i18n-example contributing guide](https://github.com/Bli-AIk/kristal-i18n-example/blob/main/CONTRIBUTING.md).
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) 或 http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) 或 http://opensource.org/licenses/MIT)
+## License
+
+Dual-licensed under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
