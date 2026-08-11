@@ -85,7 +85,7 @@ Game:loc("room1.hello")                    -- 查表
 Game:loc("room1.hello", {name = "Kris"})   -- 带变量
 ```
 
-> ⚠️ **API 与原版 LangLib 不兼容**：`Game:loc` 第一个参数永远是 ID，不接受 LangLib 的 `Game:loc("fallback", "id")` 写法。缺失 ID 会显示红色错误标记。
+> ⚠️ **API 与原版 LangLib 不兼容**：`Game:loc` 第一个参数永远是 ID，不接受 LangLib 的 `Game:loc("fallback", "id")` 写法。缺失 ID 会显示为 `<id> is missing`。
 
 ## 更多技巧
 

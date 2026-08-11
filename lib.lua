@@ -1692,7 +1692,7 @@ local function resolveName(id, default)
 
     return getNameFromTable(Game.langStr, id, primary_language, fallback_language)
         or getNameFromTable(Game.langBaseStr, id, primary_language, fallback_language)
-        or "[color:red]Name missing: " .. tostring(default or id) .. "[color:reset]"
+        or tostring(default or id) .. " is missing"
 end
 
 local function replaceNameReferences(str)
@@ -3770,7 +3770,7 @@ function Game:loc(id, var)
 
     local value = Game:locRaw(id)
     if value == nil then
-        value = "[color:red]Localization missing: " .. id .. "[color:reset]"
+        value = id .. " is missing"
     end
 
     return Game:concat(value, var)

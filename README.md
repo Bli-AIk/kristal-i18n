@@ -85,7 +85,7 @@ Game:loc("room1.hello")                    -- ID lookup
 Game:loc("room1.hello", {name = "Kris"})   -- with variables
 ```
 
-> ⚠️ **API is NOT compatible with the original LangLib**: the first argument of `Game:loc` is always an ID; LangLib's `Game:loc("fallback", "id")` form is not accepted. Missing IDs render as red error markers.
+> ⚠️ **API is NOT compatible with the original LangLib**: the first argument of `Game:loc` is always an ID; LangLib's `Game:loc("fallback", "id")` form is not accepted. Missing IDs render as `<id> is missing`.
 
 ## More Tips
 
