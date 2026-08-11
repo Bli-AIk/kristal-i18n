@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.3...v0.4.0) (2026-08-11)
+
+
+### Features
+
+* localize item battle text ([84398fb](https://github.com/Bli-AIk/kristal-i18n/commit/84398fbf6eac8e822d4f50903b33ac95b0f7b8dc))
+
+
+### Bug Fixes
+
+* simplify missing text errors ([9a172af](https://github.com/Bli-AIk/kristal-i18n/commit/9a172af5d16e41a09e122007d33da18fd1f4abfa))
+
+
+### Code Refactoring
+
+* make item battle names optional ([7d4482a](https://github.com/Bli-AIk/kristal-i18n/commit/7d4482a281505c1027cf46ad3545677db2dc0a8d))
+* replace raw text localization keys ([c924c5a](https://github.com/Bli-AIk/kristal-i18n/commit/c924c5a11a9cb4ff5c66287b492219df6271a747))
+* split lib.lua into modules ([6113d93](https://github.com/Bli-AIk/kristal-i18n/commit/6113d9324b66b7576533a8608500d97afc6d90ac))
+
 ## [0.3.3](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.2...v0.3.3) (2026-08-09)
 
 
