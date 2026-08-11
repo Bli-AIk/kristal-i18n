@@ -45,19 +45,33 @@ function Item:onToss()
     return true
 end
 
-function Item:getName()     return Game:loc("item_"..self.id.."_name") end
-function Item:getUseName()  return Game:loc("item_"..self.id.."_useName") end
+local function locChapter(key, item)
+    local chapter = tostring(Game.chapter)
+    local chapter_key = key .. "_chapter_" .. chapter
 
-local function locChapter(key)
-    local chapter_key = key .. "_chapter_" .. tostring(Game.chapter)
+    if item and item.id == "dark_candy" and item.name == "Darker Candy" then
+        local chapter_variant_key = chapter_key .. "_darker"
+        if Game.hasStr and Game:hasStr(chapter_variant_key) then
+            return Game:loc(chapter_variant_key)
+        end
+
+        local variant_key = key .. "_darker"
+        if Game.hasStr and Game:hasStr(variant_key) then
+            return Game:loc(variant_key)
+        end
+    end
+
     if Game.hasStr and Game:hasStr(chapter_key) then
         return Game:loc(chapter_key)
     end
     return Game:loc(key)
 end
 
-function Item:getDescription() return locChapter("item_"..self.id.."_description") end
-function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect") end
+function Item:getName()     return Game:loc("item_"..self.id.."_name") end
+function Item:getUseName()  return locChapter("item_"..self.id.."_useName", self) end
+
+function Item:getDescription() return locChapter("item_"..self.id.."_description", self) end
+function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect", self) end
 function Item:getCheck() return Game:loc("item_"..self.id.."_check") end
 
 function Item:getShopDescription()
