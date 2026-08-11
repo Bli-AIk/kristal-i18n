@@ -2836,6 +2836,8 @@ local function applyItemLocalizationPatch(item)
                 return original_get_battle_text(self, user, target)
             end
             return {
+                -- This hook addresses the item-specific key directly, so keep
+                -- it even when it matches the generic battle text.
                 Game:loc("item_glowshard_battleText", {
                     charaName = user.chara:getName(),
                     useName = self:getUseName()

@@ -41,6 +41,18 @@ I fully support and welcome pull requests for translations in your language! Tha
 - **The `cjk*` config is Chinese-specific.** The spacing and offset settings exist for Chinese typesetting; other languages generally don't need them.
 - **Check the context.** Some keys are shared across menus. When a translation feels ambiguous, look at how `lang/zh_hans.json` renders it, or run the demo mod to see it in-game.
 
+## How to fill item fields
+
+For items, these rules are enough:
+
+- `item_<id>_name`: the name shown normally.
+- `item_<id>_useName`: only add this when battle text needs a different name. If it is absent, the current language's `name` is used; a case difference also counts as different, so keep the uppercase English battle names.
+- `item_<id>_description`: the description shown in the item menu.
+- `item_<id>_check`: the text shown when checking an item in the Light World. It is not a fallback for `description`: some items happen to use the same text, while others add stats, line breaks, or extra wording. Translate both when the source has both; do not invent a key when the source does not.
+- `item_<id>_effect`: the short effect shown in battle, such as how much HP an item restores. Keep it empty when the source is empty.
+- `item_<id>_shopName` and `item_<id>_shopDesc`: shop text. Do not replace them with `name` or `description`.
+- Chapter and special suffixes are overrides. Battle, toss, and reaction text should get an item-specific key only when the source is different from the generic text; keep a key that custom code references directly even when its value happens to match.
+
 ## Other ways to contribute
 
 - **Report untranslated text** — if any hooked text shows up raw in-game, file an issue with a screenshot and the steps to reproduce.

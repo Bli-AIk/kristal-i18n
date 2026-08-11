@@ -45,35 +45,74 @@ function Item:onToss()
     return true
 end
 
-local function locChapter(key, item)
+-- `Game:hasStr` includes the English base language. Optional overrides must
+-- check `Game.langStr` directly so a missing local key falls back to `name`.
+local function resolveChapterKey(key, item, current_language_only)
+    local has_key
+    if current_language_only then
+        if not Game.langStr then
+            return nil
+        end
+        has_key = function(candidate)
+            return Game.langStr[candidate] ~= nil
+        end
+    else
+        if not Game.hasStr then
+            return key
+        end
+        has_key = function(candidate)
+            return Game:hasStr(candidate)
+        end
+    end
+
     local chapter = tostring(Game.chapter)
     local chapter_key = key .. "_chapter_" .. chapter
 
     if item and item.id == "dark_candy" and item.name == "Darker Candy" then
         local chapter_variant_key = chapter_key .. "_darker"
-        if Game.hasStr and Game:hasStr(chapter_variant_key) then
-            return Game:loc(chapter_variant_key)
+        if has_key(chapter_variant_key) then
+            return chapter_variant_key
         end
 
         local variant_key = key .. "_darker"
-        if Game.hasStr and Game:hasStr(variant_key) then
-            return Game:loc(variant_key)
+        if has_key(variant_key) then
+            return variant_key
         end
     end
 
-    if Game.hasStr and Game:hasStr(chapter_key) then
-        return Game:loc(chapter_key)
+    if has_key(chapter_key) then
+        return chapter_key
     end
-    return Game:loc(key)
+    if has_key(key) then
+        return key
+    end
+    return nil
+end
+
+local function locChapter(key, item)
+    return Game:loc(resolveChapterKey(key, item) or key)
 end
 
 function Item:getName()     return Game:loc("item_"..self.id.."_name") end
-function Item:getUseName()  return locChapter("item_"..self.id.."_useName", self) end
 
+-- `useName` is an optional battle-only override. Without it, battle text
+-- uses the localized canonical `name`; other item fields remain independent.
+function Item:getUseName()
+    local key = "item_"..self.id.."_useName"
+    local localized_key = resolveChapterKey(key, self, true)
+    if localized_key then
+        return Game:loc(localized_key)
+    end
+    return self:getName()
+end
+
+-- `description` is menu text and `check` is inspect text. They may match,
+-- but one must not be used as the other's fallback.
 function Item:getDescription() return locChapter("item_"..self.id.."_description", self) end
 function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect", self) end
 function Item:getCheck() return Game:loc("item_"..self.id.."_check") end
 
+-- Shop lookups are per item, even when the template text repeats.
 function Item:getShopDescription()
     return Game:loc("item_"..self.id.."_shopDesc", {typeName = self:getTypeName(), shopName = Game:loc("item_"..self.id.."_shopName")})
 end
