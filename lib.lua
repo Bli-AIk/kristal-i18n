@@ -217,6 +217,9 @@ local STATIC_TEXT_IDS = {
     ["New File"] = "save_menu_new_file",
     ["Return to Title"] = "save_menu_return_to_title",
     ["Really return to title?"] = "save_menu_really_return_to_title",
+    -- These entries adapt vanilla's literal text calls to stable language IDs.
+    -- Keep the source text here only because the upstream engine is not patched;
+    -- language files must use the IDs on the right-hand side.
     ["* You re-applied the bandage."] = "item_light/bandage_use",
     ["* You looked at the junk ball in\nadmiration.[wait:5]\n* Nothing happened."] = "item_light/ball_of_junk_use",
     ["* You really didn't want to throw\nit away."] = "item_light/ball_of_junk_toss_chapter_1",
@@ -226,6 +229,28 @@ local STATIC_TEXT_IDS = {
     ["* It broke into pieces."] = "item_light/ball_of_junk_toss_broken",
     ["* You felt bitter."] = "item_light/ball_of_junk_toss_bitter",
     ["* You felt a feeling of relief."] = "item_light/ball_of_junk_toss_relief",
+    ["* (But, the thought of discarding\nit felt very wrong.)"] = "item_light/glass_toss_2",
+    ["* (You didn't quite understand\nwhy...)"] = "item_light/glass_toss_1",
+    ["* (You fumbled and caught it.[wait:5]\nYou can't throw it away!)"] = "item_light/cards_toss_1",
+    ["* (You fumbled and caught them.[wait:5]\nYou can't throw these away!)"] = "item_light/cards_toss_2",
+    ["* ...[wait:5] but nothing happened."] = "item_light/glass_use_2",
+    ["* For some strange reason,[wait:5] for\njust a brief moment..."] = "item_light/glass_use_alone_2",
+    ["* It doesn't seem very useful."] = "item_light/glass_use_again",
+    ["* It feels like glass, but..."] = "item_light/glass_check_2",
+    ["* There is a small shard of\nsomething in your pocket."] = "item_light/glass_check_1",
+    ["* What Egg?"] = "item_light/egg_toss",
+    ["* You drank the hot chocolate.[wait:5]\n* It tasted wonderful.[wait:5]\n* Your throat tightened..."] = "item_light/hot_chocolate_use",
+    ["* You held out the flowers.[wait:5]\n* A floral scent fills the air.[wait:5]\n* Nothing happened."] = "item_light/bouquet_use",
+    ["* You held the card.[wait:5]\n* It felt flimsy between your\nfingers."] = "item_light/cards_use_1",
+    ["* You held the cards.[wait:5]\n* They felt flimsy between your\nfingers."] = "item_light/cards_use_2",
+    ["* You looked through the glass."] = "item_light/glass_use_1",
+    ["* You thought you saw through\nyour hand."] = "item_light/glass_use_alone_3",
+    ["* You used the Egg."] = "item_light/egg_use",
+    ["* Your HP was maxed out."] = "heal_maxed",
+    ["* (Your guts are being\ndestroyed.)"] = "item_light/box_of_heart_candy_use_2",
+    ["* (You unhesitatingly devoured\nthe box of heart shaped\ncandies.)"] = "item_light/box_of_heart_candy_use_1",
+    ["* (The Box of Heart Candy was\nthrown away.)"] = "item_light/box_of_heart_candy_toss",
+    ["* (You accept this destruction as\npart of life...)"] = "item_light/box_of_heart_candy_use_3",
     ["Yes"] = "yes",
     ["No"] = "no",
     ["YES"] = "yes",
@@ -1086,13 +1111,9 @@ local function localizeStaticTextValue(value)
         return out
     end
     local static = localizeStaticText(value)
-    -- Raw-string dictionary lookup, so that mod dialogue/shop/battle strings
-    -- are translated without changing call sites.
     if type(static) == "string" and Game and Game.lang == "zh_hans" then
-        if Game:hasStr(static) then
-            return Game:loc(static)
-        end
-        -- Combined messages (e.g. World:heal prefixes): localize line by line.
+        -- Combined messages (e.g. World:heal prefixes): resolve each line only
+        -- when it has an explicit built-in source-text mapping above.
         if static:find("\n", 1, true) then
             local out = {}
             local matched = false

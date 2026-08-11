@@ -36,6 +36,7 @@ I fully support and welcome pull requests for translations in your language! Tha
 ## Translation guidelines
 
 - **Keys never change — only values.** Renaming a key breaks lookups in every language.
+- **Use stable IDs.** Do not use the displayed sentence, with its punctuation or rich-text tags, as a language-file key.
 - **Keep placeholders intact.** `{key}` interpolation and `[var:name]` / `[name:kris]` markers must be preserved. You may move them within the sentence to fit your grammar, but don't drop them.
 - **Match the tone.** The vanilla Kristal texts are short and typewriter-paced. Keep your translations concise so they read well at the game's typing speed.
 - **The `cjk*` config is Chinese-specific.** The spacing and offset settings exist for Chinese typesetting; other languages generally don't need them.
