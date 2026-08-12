@@ -78,6 +78,9 @@ cutscene:text("{room1.hello}")
 
 完事儿。玩家可以在游戏内**设置菜单**中切换语言（默认 `en` / `zh_hans`）。
 
+开发时也可以给启动器传 `--lang <语言>`（例如 `--lang en` 或 `--lang zh-hans`），
+无需改动存档即可选择本次启动的语言。
+
 除了花括号，也可以直接调用 `Game:loc`：
 
 ```lua

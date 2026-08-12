@@ -18,6 +18,7 @@ return function(ctx)
     local tableCopy = runtime.tableCopy
     local normalizeLanguageId = runtime.normalizeLanguageId
     local normalizeNameLanguage = runtime.normalizeNameLanguage
+    local getStartupLanguage = runtime.getStartupLanguage
     local matchAvailableLanguage = runtime.matchAvailableLanguage
     local resolveLanguageId = runtime.resolveLanguageId
     local getDefaultLanguage = runtime.getDefaultLanguage
@@ -706,7 +707,7 @@ return function(ctx)
     function kristalI18n:load(data)
         ensureLanguageGlobals()
 
-        Game.lang = resolveLanguageId(data.lang or Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
+        Game.lang = resolveLanguageId(getStartupLanguage() or data.lang or Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
             or getDefaultLanguage(Game.langAvailable)
         Game.langSelected = data.langSelected or Game.langSelected or 1
         Game.langNameLanguage = data.langNameLanguage or Game.langNameLanguage

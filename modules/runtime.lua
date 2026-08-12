@@ -66,6 +66,20 @@ return function(ctx)
         return normalizeLanguageId(language or fallback_language or FALLBACK_LANGUAGE)
     end
 
+    local function getStartupLanguage()
+        local args = Kristal and Kristal.Args
+        if type(args) ~= "table" then
+            return nil
+        end
+
+        for _, name in ipairs({ "lang", "language" }) do
+            local values = args[name]
+            if type(values) == "table" and values[1] ~= nil and tostring(values[1]) ~= "" then
+                return values[1]
+            end
+        end
+    end
+
     local ORIGINAL_TERM_REPLACEMENTS = {
         { translated = "传说过场", original = "legend cutscene" },
         { translated = "波次", original = "wave" },
@@ -231,6 +245,7 @@ return function(ctx)
     M.normalizeLanguageId = normalizeLanguageId
     M.normalizeNameId = normalizeNameId
     M.normalizeNameLanguage = normalizeNameLanguage
+    M.getStartupLanguage = getStartupLanguage
     M.applyOriginalDebugTermReplacements = applyOriginalDebugTermReplacements
     M.matchAvailableLanguage = matchAvailableLanguage
     M.getSystemLanguage = getSystemLanguage

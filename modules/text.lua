@@ -23,6 +23,7 @@ return function(ctx)
     local normalizeLanguageId = runtime.normalizeLanguageId
     local normalizeNameId = runtime.normalizeNameId
     local normalizeNameLanguage = runtime.normalizeNameLanguage
+    local getStartupLanguage = runtime.getStartupLanguage
     local applyOriginalDebugTermReplacements = runtime.applyOriginalDebugTermReplacements
     local matchAvailableLanguage = runtime.matchAvailableLanguage
     local resolveLanguageId = runtime.resolveLanguageId
@@ -910,7 +911,7 @@ return function(ctx)
     local function ensureLanguageGlobals()
         Game.langAvailable = getLanguageList()
 
-        Game.lang = resolveLanguageId(Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
+        Game.lang = resolveLanguageId(getStartupLanguage() or Game.lang or getConfig("defaultLanguage") or DEFAULT_LANGUAGE, Game.langAvailable)
             or getDefaultLanguage(Game.langAvailable)
         if Game.langDebugTermsTranslated == nil then
             Game.langDebugTermsTranslated = true
