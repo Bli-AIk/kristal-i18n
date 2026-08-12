@@ -24,6 +24,7 @@ return function(ctx)
     local normalizeNameId = runtime.normalizeNameId
     local normalizeNameLanguage = runtime.normalizeNameLanguage
     local getStartupLanguage = runtime.getStartupLanguage
+    local getStartupNameLanguage = runtime.getStartupNameLanguage
     local applyOriginalDebugTermReplacements = runtime.applyOriginalDebugTermReplacements
     local matchAvailableLanguage = runtime.matchAvailableLanguage
     local resolveLanguageId = runtime.resolveLanguageId
@@ -898,7 +899,8 @@ return function(ctx)
     local function ensureNameLanguageGlobals()
         Game.langNameLanguages = getNameLanguageList()
         -- A player's saved or selected language takes precedence over config.
-        local requested = Game.langNameLanguage
+        local requested = getStartupNameLanguage()
+            or Game.langNameLanguage
             or getConfig("defaultNameLanguage")
             or Game.lang
         Game.langNameLanguage = matchAvailableLanguage(

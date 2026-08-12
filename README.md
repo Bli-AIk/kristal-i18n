@@ -80,6 +80,7 @@ Done. Players can switch languages in the in-game **settings menu** (default `en
 
 For development, pass `--lang <language>` to the launcher (for example `--lang en`
 or `--lang zh-hans`) to select the startup language without changing the save file.
+The name language can be selected the same way with `--name-lang <language>`.
 
 Besides curly braces, you can also call `Game:loc` directly:
 
