@@ -1,9 +1,7 @@
 # kristal-i18n
 
-[![license](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-APACHE)
-<br>
-<img src="https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
-<img src="https://img.shields.io/badge/Kristal-FF6B35?style=for-the-badge&logo=love2d&logoColor=white" />
+[![license](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-APACHE) <img src="https://img.shields.io/github/repo-size/Bli-AIk/kristal-i18n.svg"/> <img src="https://img.shields.io/github/last-commit/Bli-AIk/kristal-i18n.svg"/> <img src="https://img.shields.io/github/v/release/Bli-AIk/kristal-i18n.svg"/> <br>
+<img src="https://img.shields.io/badge/Deltarune-001225?style=for-the-badge&labelColor=001225&logo=undertale&logoColor=ff0000" /> <img src="https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" /> <img src="https://img.shields.io/badge/Kristal-FF6B35?style=for-the-badge&logo=love2d&logoColor=white" />
 
 ![In battle](./screenshot-battle.png)
 
@@ -22,9 +20,15 @@
 
 **kristal-i18n** — a multilingual localization library for Kristal, with English and Simplified Chinese built in.
 
-| English | 简体中文 |
-|---------|---------|
+| English | 简体中文                        |
+| ------- | ------------------------------- |
 | English | [简体中文](./README_zh_hans.md) |
+
+## Kristal Version Support
+
+| `kristal`                                                                                                      | `kristal-i18n` |
+| -------------------------------------------------------------------------------------------------------------- | -------------- |
+| [v0.10.0](https://github.com/KristalTeam/Kristal/commit/752bc0688ba97ca8a256ba9125b7e05a1ca6edbd) (`752bc068`) | v0.4.0         |
 
 ## Design Goals
 
@@ -52,7 +56,14 @@ Three steps, done:
 
 **1. Install the library**
 
-Drop the whole `libraries/kristal-i18n` folder into your mod:
+Install it as a submodule (recommended — keeps the library versioned alongside your mod):
+
+```sh
+git submodule add https://github.com/Bli-AIk/kristal-i18n.git libraries/kristal-i18n
+git submodule update --init --recursive
+```
+
+Or, without Git: download the [release source](https://github.com/Bli-AIk/kristal-i18n/releases) (or clone the latest code for rolling updates) and drop the whole folder into your mod:
 
 ```text
 mods/your_mod/libraries/kristal-i18n/
@@ -64,7 +75,7 @@ Create `lang/<language>.json` in your mod and write the text you want to transla
 
 ```json
 {
-    "room1.hello": "* Hello there!"
+  "room1.hello": "* Hello there!"
 }
 ```
 
@@ -132,12 +143,12 @@ This library's hook skeleton and preset ID patterns are inherited from [LangLib]
 
 The bundled Chinese texture overrides use texture assets from [Goodman 3 Localization Group | UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/).
 
-| Project | Author/Organization |
-|---------|---------------------|
-| [LangLib](https://gamebanana.com/mods/627141) | Elioze |
-| [DELTARUNE: Frostveil](https://www.bilibili.com/video/BV12nQKB9E3V) and [Frozen Heart](https://www.bilibili.com/video/BV18CC4Y6EFo) localization | [WasneetPotato](https://space.bilibili.com/1641628190) |
-| [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese) | [Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/) |
-| Chinese fork | AIk |
+| Project                                                                                                                                          | Author/Organization                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| [LangLib](https://gamebanana.com/mods/627141)                                                                                                    | Elioze                                                                                                  |
+| [DELTARUNE: Frostveil](https://www.bilibili.com/video/BV12nQKB9E3V) and [Frozen Heart](https://www.bilibili.com/video/BV18CC4Y6EFo) localization | [WasneetPotato](https://space.bilibili.com/1641628190)                                                  |
+| [DeltaruneChinese](https://github.com/gm3dr/DeltaruneChinese)                                                                                    | [Goodman 3 Localization Group \| UNDERTALE & DELTARUNE Chinese Localization](https://github.com/gm3dr/) |
+| Chinese fork                                                                                                                                     | AIk                                                                                                     |
 
 ## Contributing
 

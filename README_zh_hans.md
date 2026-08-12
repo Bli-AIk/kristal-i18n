@@ -1,9 +1,7 @@
 # kristal-i18n
 
-[![license](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-APACHE)
-<br>
-<img src="https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" />
-<img src="https://img.shields.io/badge/Kristal-FF6B35?style=for-the-badge&logo=love2d&logoColor=white" />
+[![license](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE-APACHE) <img src="https://img.shields.io/github/repo-size/Bli-AIk/kristal-i18n.svg"/> <img src="https://img.shields.io/github/last-commit/Bli-AIk/kristal-i18n.svg"/> <img src="https://img.shields.io/github/v/release/Bli-AIk/kristal-i18n.svg"/> <br>
+<img src="https://img.shields.io/badge/Deltarune-001225?style=for-the-badge&labelColor=001225&logo=undertale&logoColor=ff0000" /> <img src="https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white" /> <img src="https://img.shields.io/badge/Kristal-FF6B35?style=for-the-badge&logo=love2d&logoColor=white" />
 
 ![战斗内展示](./screenshot-battle.png)
 
@@ -22,9 +20,15 @@
 
 **kristal-i18n** — 简洁强大的 Kristal 多语言全方位本地化库，内置英文与简体中文。
 
-| 简体中文 | English                   |
-| -------- | ------------------------- |
+| 简体中文 | English                |
+| -------- | ---------------------- |
 | 简体中文 | [English](./README.md) |
+
+## Kristal 版本支持
+
+| `kristal`                                                                                                      | `kristal-i18n` |
+| -------------------------------------------------------------------------------------------------------------- | -------------- |
+| [v0.10.0](https://github.com/KristalTeam/Kristal/commit/752bc0688ba97ca8a256ba9125b7e05a1ca6edbd) (`752bc068`) | v0.4.0         |
 
 ## 设计目标
 
@@ -52,7 +56,14 @@
 
 **1. 把库装上**
 
-把 `libraries/kristal-i18n` 整个目录放进你的模组：
+以子模块方式安装（建议——库会跟着你的 mod 一起版本管理）：
+
+```sh
+git submodule add https://github.com/Bli-AIk/kristal-i18n.git libraries/kristal-i18n
+git submodule update --init --recursive
+```
+
+或者不用 Git：直接下载 [Release 源码](https://github.com/Bli-AIk/kristal-i18n/releases)（或克隆最新代码做滚动更新），把整个目录放进你的模组：
 
 ```text
 mods/your_mod/libraries/kristal-i18n/
