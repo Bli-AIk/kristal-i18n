@@ -78,6 +78,9 @@ cutscene:text("{room1.hello}")
 
 Done. Players can switch languages in the in-game **settings menu** (default `en` / `zh_hans`).
 
+For development, pass `--lang <language>` to the launcher (for example `--lang en`
+or `--lang zh-hans`) to select the startup language without changing the save file.
+
 Besides curly braces, you can also call `Game:loc` directly:
 
 ```lua
