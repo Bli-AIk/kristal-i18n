@@ -23,6 +23,7 @@ local ctx = {
 
 ctx.data = libRequire(library_id, "modules.data")(ctx)
 ctx.runtime = libRequire(library_id, "modules.runtime")(ctx)
+ctx.system_language = libRequire(library_id, "modules.system_language")(ctx)
 ctx.cjk = libRequire(library_id, "modules.cjk")(ctx)
 ctx.text = libRequire(library_id, "modules.text")(ctx)
 ctx.assets = libRequire(library_id, "modules.assets")(ctx)

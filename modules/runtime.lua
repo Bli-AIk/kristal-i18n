@@ -146,74 +146,11 @@ return function(ctx)
         return nil
     end
 
-    local function addLocale(locales, value)
-        if type(value) == "string" then
-            for locale in value:gmatch("[^:]+") do
-                if locale ~= "" and locale ~= "C" and locale ~= "POSIX" then
-                    table.insert(locales, locale)
-                end
-            end
-        elseif type(value) == "table" then
-            for _, locale in ipairs(value) do
-                addLocale(locales, locale)
-            end
-        end
-    end
-
-    local function getSystemLocales()
-        local locales = {}
-
-        if love and love.system then
-            if type(love.system.getPreferredLocales) == "function" then
-                local ok, value = pcall(love.system.getPreferredLocales)
-                if ok then
-                    addLocale(locales, value)
-                end
-            end
-
-            if type(love.system.getLocale) == "function" then
-                local ok, value = pcall(love.system.getLocale)
-                if ok then
-                    addLocale(locales, value)
-                end
-            end
-        end
-
-        if os and type(os.setlocale) == "function" then
-            local ok, value = pcall(os.setlocale, nil, "ctype")
-            if ok then
-                addLocale(locales, value)
-            end
-        end
-
-        if os and type(os.getenv) == "function" then
-            for _, name in ipairs({ "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG" }) do
-                local ok, value = pcall(os.getenv, name)
-                if ok then
-                    addLocale(locales, value)
-                end
-            end
-        end
-
-        return locales
-    end
-
-    local function getSystemLanguage(available)
-        for _, locale in ipairs(getSystemLocales()) do
-            local lang = matchAvailableLanguage(locale, available)
-            if lang then
-                return lang
-            end
-        end
-
-        return nil
-    end
-
     local function resolveLanguageId(lang, available)
         lang = normalizeLanguageId(lang)
 
         if lang == AUTO_LANGUAGE then
-            return getSystemLanguage(available)
+            return ctx.system_language.getSystemLanguage(available)
         end
 
         return matchAvailableLanguage(lang, available)
@@ -233,7 +170,6 @@ return function(ctx)
     M.normalizeNameLanguage = normalizeNameLanguage
     M.applyOriginalDebugTermReplacements = applyOriginalDebugTermReplacements
     M.matchAvailableLanguage = matchAvailableLanguage
-    M.getSystemLanguage = getSystemLanguage
     M.resolveLanguageId = resolveLanguageId
     M.getDefaultLanguage = getDefaultLanguage
     return M

@@ -5,6 +5,7 @@ return function(ctx)
     local kristalI18n = ctx.library
     local constants = ctx.constants
     local runtime = ctx.runtime
+    local system_language = ctx.system_language
     local cjk = ctx.cjk
     local text = ctx.text
     local assets = ctx.assets
@@ -21,7 +22,7 @@ return function(ctx)
     local matchAvailableLanguage = runtime.matchAvailableLanguage
     local resolveLanguageId = runtime.resolveLanguageId
     local getDefaultLanguage = runtime.getDefaultLanguage
-    local getSystemLanguage = runtime.getSystemLanguage
+    local getSystemLanguage = system_language.getSystemLanguage
     local loadCjkConfig = cjk.loadCjkConfig
     local hasCjkText = cjk.hasCjkText
     local wrapCjkTextValue = cjk.wrapCjkTextValue
