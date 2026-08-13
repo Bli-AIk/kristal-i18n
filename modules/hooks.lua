@@ -36,6 +36,13 @@ return function(ctx)
         ["Fluffiness"] = "fluffiness_stat",
         ["Coldness"] = "coldness_stat",
         ["Boldness"] = "boldness_stat",
+        ["Kindness"] = "kindness_stat",
+        ["Dogness"] = "dogness_stat",
+        ["Crudeness"] = "crudeness_stat",
+        ["Purple"] = "purple_stat",
+        ["Sweetness"] = "sweetness_stat",
+        -- Susie's chapter 2 joke value next to "Purple".
+        ["Yes"] = "yes",
     }
 
     local ITEM_BONUS_NAMES = {
