@@ -9,6 +9,7 @@ return function(ctx)
     local settings = {
         cjkFixedTextSpacing = constants.CJK_FIXED_TEXT_SPACING,
         cjkDialogueTextSpacing = constants.CJK_DIALOGUE_TEXT_SPACING,
+        cjkTitleTextSpacing = math.floor(constants.CJK_FIXED_TEXT_SPACING / 2),
         cjkDialogueYOffset = constants.CJK_DIALOGUE_Y_OFFSET,
         cjkTypewriterSpeedMultiplier = constants.CJK_TYPEWRITER_SPEED_MULTIPLIER,
     }
@@ -18,6 +19,10 @@ return function(ctx)
             or constants.CJK_FIXED_TEXT_SPACING
         settings.cjkDialogueTextSpacing = runtime.getConfig("cjkDialogueTextSpacing")
             or constants.CJK_DIALOGUE_TEXT_SPACING
+        -- Party titles and the description box default to half the fixed-text
+        -- spacing; configurable via "cjkTitleTextSpacing".
+        settings.cjkTitleTextSpacing = runtime.getConfig("cjkTitleTextSpacing")
+            or math.floor(settings.cjkFixedTextSpacing / 2)
         settings.cjkDialogueYOffset = runtime.getConfig("cjkDialogueYOffset")
             or constants.CJK_DIALOGUE_Y_OFFSET
         settings.cjkTypewriterSpeedMultiplier = runtime.getConfig("cjkTypewriterSpeedMultiplier")

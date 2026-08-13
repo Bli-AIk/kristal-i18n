@@ -401,7 +401,40 @@ return function(ctx)
                         })
                     end
                 end
-                return orig(self, value, visible)
+                -- The description box uses half the regular CJK fixed-text
+                -- spacing; Text:setText bakes the spacing into the text.
+                local saved = cjk.settings.cjkFixedTextSpacing
+                cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+                local ok, result = xpcall(function()
+                    return orig(self, value, visible)
+                end, debug.traceback)
+                cjk.settings.cjkFixedTextSpacing = saved
+                if not ok then
+                    error(result)
+                end
+                return result
+            end)
+        end
+
+        if DarkPowerMenu then
+            -- The party title (class name + its description) is drawn next to
+            -- the character name in the power menu. Use half the regular CJK
+            -- spacing for the title only, leaving the name untouched.
+            HookSystem.hook(DarkPowerMenu, "drawChar", function(orig, self, ...)
+                local party = self.party:getSelected()
+                Draw.setColor(PALETTE["world_text"])
+                love.graphics.print(party:getName(), 48, -7)
+
+                local saved = cjk.settings.cjkFixedTextSpacing
+                cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+                local ok, result = xpcall(function()
+                    love.graphics.print(party:getTitle(), 238, -7)
+                end, debug.traceback)
+                cjk.settings.cjkFixedTextSpacing = saved
+                if not ok then
+                    error(result)
+                end
+                return result
             end)
         end
 

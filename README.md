@@ -127,6 +127,7 @@ Defaults live in `lib.json`; override them in your mod's `mod.json`:
         "languageToggleKey": "f7",
         "cjkFixedTextSpacing": 4,
         "cjkDialogueTextSpacing": 4,
+        "cjkTitleTextSpacing": 2,
         "cjkDialogueYOffset": -1,
         "cjkTypewriterSpeedMultiplier": 1
     }
@@ -136,6 +137,7 @@ Defaults live in `lib.json`; override them in your mod's `mod.json`:
 - `defaultLanguage` — a specific language ID or `"auto"` (detects the system language and picks the best match); the name language is independent from the text language
 - `languageToggleKey` — the key that quickly toggles the language; set to `false` to disable
 - `cjk*` — fine-tuning for Chinese typesetting: fixed character spacing, dialogue spacing and vertical offset, and typewriter speed multiplier. These adjustments exist specifically for Chinese (not needed for English); override them to fit other CJK languages or tweak the look
+- `cjkTitleTextSpacing` — spacing for party titles and the menu description box; defaults to half of `cjkFixedTextSpacing`
 
 ## Upstream & References
 
