@@ -63,6 +63,7 @@ return function(ctx)
     local getLocalizedTextureAsset = assets.getLocalizedTextureAsset
     local refreshMapName = assets.refreshMapName
     local refreshBattleLocalization = assets.refreshBattleLocalization
+    local mapNameKey = assets.mapNameKey
 
     local hookMethod = hooks.hookMethod
     local hookDebugSystemLocalization = hooks.hookDebugSystemLocalization
@@ -72,10 +73,82 @@ return function(ctx)
     local resolveGonerChoice = hooks.resolveGonerChoice
     local resolveGonerChoices = hooks.resolveGonerChoices
     local resolveTextList = hooks.resolveTextList
-    local resolveFileData = hooks.resolveFileData
+    local findRoomNameKeyInTable = hooks.findRoomNameKeyInTable
+    local findRoomNameKey = hooks.findRoomNameKey
     local resolveShopItemOptions = hooks.resolveShopItemOptions
     local resolveFileNamerOptions = hooks.resolveFileNamerOptions
     local resolveListMenuValues = hooks.resolveListMenuValues
+
+    -- Searches the currently loaded language tables, then every other available
+    -- language table, for a key whose value matches the stored room name. This
+    -- lets old Chinese saves be migrated even when the game is currently
+    -- running in English (the stored room name is Chinese, so it only matches
+    -- the Chinese table).
+    local function findRoomNameKeyInAnyLanguage(value)
+        local key = findRoomNameKey(value)
+        if key then
+            return key
+        end
+
+        if type(Game.langAvailable) ~= "table" then
+            return nil
+        end
+
+        for _, lang in ipairs(Game.langAvailable) do
+            if lang ~= Game.lang and lang ~= FALLBACK_LANGUAGE then
+                local lang_table = loadLangTable(lang)
+                key = findRoomNameKeyInTable(value, lang_table)
+                if key then
+                    return key
+                end
+            end
+        end
+
+        return nil
+    end
+
+    -- Rewrites save summaries that were created before this library stored the
+    -- raw room name: the file select in the engine's main menu cannot render
+    -- Chinese, so move the localized room name behind room_name_key and store
+    -- the English (ASCII-safe) value in room_name. In-game menus keep showing
+    -- the localized name through Kristal.getSaveFile.
+    local function migrateSaveFileRoomNames()
+        if not Mod or not Mod.info or not Mod.info.id or not Game
+            or type(Game.langStr) ~= "table" or type(Game.langBaseStr) ~= "table"
+        then
+            return
+        end
+
+        for slot = 1, 3 do
+            local data = Kristal.loadData("file_" .. slot, Mod.info.id)
+            if type(data) == "table" and type(data.room_name) == "string"
+                and hasCjkText(data.room_name)
+            then
+                local key = data.room_name_key
+                if type(key) ~= "string" or key == "" then
+                    key = findRoomNameKeyInAnyLanguage(data.room_name)
+                end
+
+                if type(key) == "string" and key ~= "" then
+                    local raw_name = Game.langBaseStr[key]
+                    if type(raw_name) == "string" and raw_name ~= "" then
+                        local changed = false
+                        if data.room_name_key ~= key then
+                            data.room_name_key = key
+                            changed = true
+                        end
+                        if data.room_name ~= raw_name then
+                            data.room_name = raw_name
+                            changed = true
+                        end
+                        if changed then
+                            Kristal.saveData("file_" .. slot, data, Mod.info.id)
+                        end
+                    end
+                end
+            end
+        end
+    end
 
     function kristalI18n:init()
         loadCjkConfig()
@@ -137,6 +210,8 @@ return function(ctx)
         Game:loadLang(Game.lang)
 
         Game.hasXtraConfig = (Utils.getAnyCase(Mod.libs, "xtractrl") and true) or false
+
+        migrateSaveFileRoomNames()
 
         HookSystem.hook(Assets, "getFont", function(orig, path, size)
             local lang_path = "lang/" .. (Game.lang or FALLBACK_LANGUAGE) .. "/" .. path
@@ -590,11 +665,14 @@ return function(ctx)
             end)
         end
 
+        -- FileButton is used by the engine's main-menu file select. That menu
+        -- reads save data straight from disk via Kristal.loadData (bypassing
+        -- Kristal.getSaveFile), so it draws whatever is persisted and must show
+        -- the ASCII-safe values stored in the save file; do NOT hook
+        -- FileButton:setData (localizing room_name/name there would re-introduce
+        -- Chinese into the main menu). Only the in-game save menus are hooked,
+        -- through Kristal.getSaveFile.
         if FileButton then
-            hookMethod(FileButton, "setData", function(orig, self, data)
-                return orig(self, resolveFileData(data))
-            end)
-
             hookMethod(FileButton, "setChoices", function(orig, self, choices, prompt)
                 return orig(self, resolveTextList(choices), resolveDisplayText(prompt))
             end)
@@ -757,6 +835,33 @@ return function(ctx)
         data.langSelected = Game.langSelected
         data.langNameLanguage = Game.langNameLanguage
         data.langDebugTermsTranslated = Game:getDebugTermsTranslated()
+
+        -- The engine's main-menu file select reads save data straight from disk
+        -- via Kristal.loadData (bypassing Kristal.getSaveFile), so the summary
+        -- persisted here must be ASCII-safe: store the raw room name and
+        -- remember the localization key; in-game menus re-localize it through
+        -- Kristal.getSaveFile.
+        local map = Game and Game.world and Game.world.map
+        if map and map.data and map.data.properties then
+            local room_key = map.data.properties["name_id"]
+                or (map.id and mapNameKey(map.id))
+            if type(room_key) == "string" and room_key ~= "" then
+                local raw_room_name = map.data.properties["name"]
+                if type(raw_room_name) ~= "string" or raw_room_name == "" then
+                    -- Maps without a raw name property fall back to the base
+                    -- (English) localized name so the saved summary stays
+                    -- ASCII-safe.
+                    raw_room_name = type(Game.langBaseStr) == "table"
+                        and Game.langBaseStr[room_key]
+                        or nil
+                end
+                if type(raw_room_name) == "string" and raw_room_name ~= "" then
+                    data.room_name = raw_room_name
+                end
+                data.room_name_key = room_key
+            end
+        end
+
         return data
     end
 

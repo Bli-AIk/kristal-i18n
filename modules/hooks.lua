@@ -264,14 +264,69 @@ return function(ctx)
         return out
     end
 
+    -- Finds a localization key whose translated value equals the given string.
+    -- Prefers the library's default map_* keys, then any key ending in "name",
+    -- then any other matching key.
+    local function findRoomNameKeyInTable(value, lang_table)
+        if type(value) ~= "string" or type(lang_table) ~= "table" then
+            return nil
+        end
+
+        local fallback
+        for key, translated in pairs(lang_table) do
+            if type(key) == "string" and type(translated) == "string" and translated == value then
+                if key:match("^map_") then
+                    return key
+                end
+                if not fallback or (not fallback:match("name$") and key:match("name$")) then
+                    fallback = key
+                end
+            end
+        end
+        return fallback
+    end
+
+    -- Save files created before the library stored room_name_key: infer the
+    -- localization key from the currently loaded language tables when the stored
+    -- room name matches one of the localized map name values.
+    local function findRoomNameKey(value)
+        local key = findRoomNameKeyInTable(value, Game and Game.langStr)
+        if key then
+            return key
+        end
+        return findRoomNameKeyInTable(value, Game and Game.langBaseStr)
+    end
+
     local function resolveFileData(value)
         if type(value) ~= "table" or isClassInstance(value) then
             return value
         end
 
         local result = tableCopy(value)
-        result.name = resolveDisplayText(value.name)
-        result.room_name = resolveDisplayText(value.room_name)
+
+        -- The save name is player input; never run it through static-text
+        -- localization (a name like "Save" must stay exactly as entered).
+        result.name = value.name
+
+        -- Keep the raw room name in the save file (the engine's main-menu file
+        -- select reads save data straight from disk via Kristal.loadData,
+        -- bypassing this hook), and re-localize it here for in-game display.
+        local room_key = result.room_name_key
+        if type(room_key) ~= "string" or room_key == "" then
+            room_key = findRoomNameKey(result.room_name)
+            if room_key then
+                result.room_name_key = room_key
+            end
+        end
+
+        if type(room_key) == "string" and room_key ~= ""
+            and Game and Game.hasStr and Game:hasStr(room_key)
+        then
+            result.room_name = Game:loc(room_key)
+        else
+            result.room_name = resolveDisplayText(value.room_name)
+        end
+
         return result
     end
 
@@ -439,6 +494,16 @@ return function(ctx)
         end
 
         kristalI18n.framework_localization_hooked = true
+
+        -- In-game save menus read save summaries through Kristal.getSaveFile;
+        -- re-localize the stored raw room name there. The engine's main-menu
+        -- file select uses Kristal.loadData directly, so it keeps the raw,
+        -- ASCII-safe value from the save file.
+        if Kristal and Kristal.getSaveFile then
+            HookSystem.hook(Kristal, "getSaveFile", function(orig, id, path)
+                return resolveFileData(orig(id, path))
+            end)
+        end
 
         HookSystem.hook(Item, "getBonusName", function(orig, item, ...)
             local bonus_name = orig(item, ...)
@@ -903,6 +968,8 @@ return function(ctx)
     M.resolveGonerChoices = resolveGonerChoices
     M.resolveTextList = resolveTextList
     M.resolveTextLines = resolveTextLines
+    M.findRoomNameKeyInTable = findRoomNameKeyInTable
+    M.findRoomNameKey = findRoomNameKey
     M.resolveFileData = resolveFileData
     M.resolveShopItemOptions = resolveShopItemOptions
     M.resolveFileNamerOptions = resolveFileNamerOptions

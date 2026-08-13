@@ -215,5 +215,6 @@ return function(ctx)
     M.refreshMapName = refreshMapName
     M.refreshBattleLocalization = refreshBattleLocalization
     M.localizeMapName = localizeMapName
+    M.mapNameKey = mapNameKey
     return M
 end
