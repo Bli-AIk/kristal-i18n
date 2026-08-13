@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.4.0...v0.4.1) (2026-08-13)
+
+
+### chore
+
+* force release 0.4.1 ([3d3dbe7](https://github.com/Bli-AIk/kristal-i18n/commit/3d3dbe7b5a5792503eb31f24b1bf777a15b47988))
+
+
+### Features
+
+* apply startup language from launch args ([7acde54](https://github.com/Bli-AIk/kristal-i18n/commit/7acde54a99001bf61a1b5c0ed37f56bc180dff94))
+* apply startup name language from launch args ([cddb190](https://github.com/Bli-AIk/kristal-i18n/commit/cddb1908d82ee3e0fb8ec341dc02c91c17ae7966))
+* **cjk:** halve CJK spacing for party titles and descriptions ([c041f8b](https://github.com/Bli-AIk/kristal-i18n/commit/c041f8bba7bf4e9328e74e4a487d77af58d83c9e))
+* detect system language via SDL FFI ([e81a4a1](https://github.com/Bli-AIk/kristal-i18n/commit/e81a4a183fc0d2dcbcc47384d9e56863f0f4174e))
+* **i18n:** translate power menu joke stats ([5c699d5](https://github.com/Bli-AIk/kristal-i18n/commit/5c699d5b678c12fa1feb40bdd8d1da31031f6556))
+
+
+### Bug Fixes
+
+* **i18n:** add per-chapter party titles and ACT description ([42c5ea7](https://github.com/Bli-AIk/kristal-i18n/commit/42c5ea76dcaf6d4c81b03d8696b1c82b6b67170f))
+* **save:** keep persisted room names ASCII-safe for the main menu ([c57dc31](https://github.com/Bli-AIk/kristal-i18n/commit/c57dc31c8bb13e64654acf22e2eaf5c8d2e25603))
+
 ## [0.4.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.3...v0.4.0) (2026-08-11)
 
 ### Features
