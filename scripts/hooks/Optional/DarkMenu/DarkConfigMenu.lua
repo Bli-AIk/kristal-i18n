@@ -94,89 +94,74 @@ local function changeNameLanguage(direction)
     return false
 end
 
-function DarkConfigMenu:addExitOptions()
-    local language_option = DarkConfigOption(self, Game:loc("lang_config"), function()
-        self:setState("LANGUAGE")
-    end)
-    language_option.i18n_text_id = "lang_config"
-    self.i18n_language_option = self:addOption(language_option)
+local DarkConfigLanguageState, language_super = Class(StateClass)
 
-    super.addExitOptions(self)
+function DarkConfigLanguageState:init(menu)
+    self.menu = menu
 end
 
-function DarkConfigMenu:init()
-    super.init(self)
-
-    self.state_manager:addState("LANGUAGE", {
-        enter = self.enterLanguageState,
-        leave = self.leaveLanguageState,
-        update = self.updateLanguageState,
-        draw = self.drawLanguageState,
-    })
-
-    refreshLabels(self)
+function DarkConfigLanguageState:registerEvents()
+    self:registerEvent("enter", self.onEnter)
+    self:registerEvent("leave", self.onLeave)
+    self:registerEvent("update", self.onUpdate)
+    self:registerEvent("draw", self.onDraw)
 end
 
-function DarkConfigMenu:update()
-    if self.i18n_menu_language ~= Game:getLanguage() then
-        refreshLabels(self)
-    end
-    return super.update(self)
+function DarkConfigLanguageState:onEnter(old_state)
+    self.currently_selected = 1
+    self.menu:hideOptions()
 end
 
-function DarkConfigMenu:enterLanguageState()
-    self.language_selected = 1
-    self:hideOptions()
+function DarkConfigLanguageState:onLeave(new_state)
+    self.menu:showOptions()
 end
 
-function DarkConfigMenu:leaveLanguageState()
-    self:showOptions()
-end
+function DarkConfigLanguageState:onUpdate()
+    local menu = self.menu
 
-function DarkConfigMenu:updateLanguageState()
     if Input.pressed("cancel") then
-        self.currently_selected = languageOptionIndex(self)
+        menu.currently_selected = languageOptionIndex(menu)
         Assets.stopAndPlaySound("ui_select")
-        self:setState("MAIN")
+        menu:setState("MAIN")
         return
     end
 
     if Input.pressed("confirm") then
-        if self.language_selected == 3 then
-            self.currently_selected = languageOptionIndex(self)
+        if self.currently_selected == 3 then
+            menu.currently_selected = languageOptionIndex(menu)
             Assets.stopAndPlaySound("ui_select")
-            self:setState("MAIN")
+            menu:setState("MAIN")
         else
             Assets.stopAndPlaySound("ui_select")
         end
         return
     end
 
-    local old_selected = self.language_selected
+    local old_selected = self.currently_selected
     if Input.pressed("up") then
-        self.language_selected = self.language_selected - 1
+        self.currently_selected = self.currently_selected - 1
     end
     if Input.pressed("down") then
-        self.language_selected = self.language_selected + 1
+        self.currently_selected = self.currently_selected + 1
     end
-    self.language_selected = MathUtils.clamp(self.language_selected, 1, 3)
+    self.currently_selected = MathUtils.clamp(self.currently_selected, 1, 3)
 
-    if old_selected ~= self.language_selected then
+    if old_selected ~= self.currently_selected then
         Assets.stopAndPlaySound("ui_move")
     end
 
     local changed = false
     if Input.pressed("left") then
-        if self.language_selected == 1 then
-            changed = changeLanguage(self, -1)
-        elseif self.language_selected == 2 then
+        if self.currently_selected == 1 then
+            changed = changeLanguage(menu, -1)
+        elseif self.currently_selected == 2 then
             changed = changeNameLanguage(-1)
         end
     end
     if Input.pressed("right") then
-        if self.language_selected == 1 then
-            changed = changeLanguage(self, 1)
-        elseif self.language_selected == 2 then
+        if self.currently_selected == 1 then
+            changed = changeLanguage(menu, 1)
+        elseif self.currently_selected == 2 then
             changed = changeNameLanguage(1)
         end
     end
@@ -186,11 +171,12 @@ function DarkConfigMenu:updateLanguageState()
     end
 end
 
-function DarkConfigMenu:drawLanguageState()
+function DarkConfigLanguageState:onDraw()
+    local menu = self.menu
     local font = Assets.getFont("main")
     love.graphics.setFont(font)
     Draw.setColor(PALETTE["world_text"])
-    love.graphics.print(Game:loc("language_settings_config"), 148, -12)
+    love.graphics.printf(Game:loc("language_settings_config"), 0, -12, menu.width, "center")
 
     local labels = {
         Game:loc("text_language_config"),
@@ -205,7 +191,7 @@ function DarkConfigMenu:drawLanguageState()
 
     for index, label in ipairs(labels) do
         Draw.setColor(PALETTE["world_text"])
-        local y = 30 + ((index - 1) * 32)
+        local y = 38 + ((index - 1) * menu:getOptionHeight())
         love.graphics.print(label, 88, y)
 
         if values[index] then
@@ -215,8 +201,34 @@ function DarkConfigMenu:drawLanguageState()
     end
 
     Draw.setColor(Game:getSoulColor())
-    Draw.draw(self.heart_sprite, 63, 40 + ((self.language_selected - 1) * 32))
+    Draw.draw(menu.heart_sprite, 63, 48 + ((self.currently_selected - 1) * menu:getOptionHeight()))
     Draw.setColor(1, 1, 1, 1)
+end
+
+function DarkConfigMenu:addExitOptions()
+    local language_option = DarkConfigOption(self, Game:loc("lang_config"), function()
+        self:setState("LANGUAGE")
+    end)
+    language_option.i18n_text_id = "lang_config"
+    self.i18n_language_option = self:addOption(language_option)
+
+    super.addExitOptions(self)
+end
+
+function DarkConfigMenu:init()
+    super.init(self)
+
+    self.language_state = DarkConfigLanguageState(self)
+    self.state_manager:addState("LANGUAGE", self.language_state)
+
+    refreshLabels(self)
+end
+
+function DarkConfigMenu:update()
+    if self.i18n_menu_language ~= Game:getLanguage() then
+        refreshLabels(self)
+    end
+    return super.update(self)
 end
 
 function DarkConfigBooleanOption:draw()
