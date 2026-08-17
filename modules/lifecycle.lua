@@ -509,6 +509,68 @@ return function(ctx)
                 end
                 return result
             end)
+
+            -- The stat labels (Attack/Defense/Magic) and the power stats below
+            -- them use half the regular CJK spacing, matching the title.
+            HookSystem.hook(DarkPowerMenu, "drawStats", function(orig, self, ...)
+                local saved = cjk.settings.cjkFixedTextSpacing
+                cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+                local ok, result = xpcall(function()
+                    return orig(self)
+                end, debug.traceback)
+                cjk.settings.cjkFixedTextSpacing = saved
+                if not ok then
+                    error(result)
+                end
+                return result
+            end)
+
+            -- The spell list (ACT and spell names) uses half the regular CJK
+            -- spacing as well.
+            HookSystem.hook(DarkPowerMenu, "drawSpells", function(orig, self, ...)
+                local saved = cjk.settings.cjkFixedTextSpacing
+                cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+                local ok, result = xpcall(function()
+                    return orig(self)
+                end, debug.traceback)
+                cjk.settings.cjkFixedTextSpacing = saved
+                if not ok then
+                    error(result)
+                end
+                return result
+            end)
+        end
+
+        if DarkEquipMenu then
+            -- The equip menu shows the same stat labels; keep them at half the
+            -- regular CJK spacing too.
+            HookSystem.hook(DarkEquipMenu, "drawStats", function(orig, self, ...)
+                local saved = cjk.settings.cjkFixedTextSpacing
+                cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+                local ok, result = xpcall(function()
+                    return orig(self)
+                end, debug.traceback)
+                cjk.settings.cjkFixedTextSpacing = saved
+                if not ok then
+                    error(result)
+                end
+                return result
+            end)
+
+            -- The equipped slots (weapon + two armors) also draw item names
+            -- with CJK spacing; halve it as well.
+            HookSystem.hook(DarkEquipMenu, "drawEquipped", function(orig, self, ...)
+                local saved = cjk.settings.cjkFixedTextSpacing
+                cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+                local ok, result = xpcall(function()
+                    return orig(self)
+                end, debug.traceback)
+                cjk.settings.cjkFixedTextSpacing = saved
+                if not ok then
+                    error(result)
+                end
+                return result
+            end)
         end
 
         hookDebugSystemLocalization()
