@@ -71,6 +71,23 @@ return function(ctx)
         ["Trance"] = "bonus_trance",
         ["Vampire"] = "bonus_vampire",
         ["$ +5%"] = "bonus_money_5",
+        ["Critical"] = "bonus_critical",
+        ["Pacify0TP"] = "bonus_pacify_0_tp",
+        ["TheBest"] = "bonus_the_best",
+        ["Wicked"] = "bonus_wicked",
+        ["Coolness"] = "bonus_coolness",
+        ["$ -90%"] = "bonus_money_90_down",
+        ["DefendHeal"] = "bonus_defend_heal",
+        ["HasAntenna"] = "bonus_has_antenna",
+        ["ScytheTP-"] = "bonus_scythe_tp_down",
+        ["InvTime+"] = "bonus_inv_time_up",
+        ["CatDefend"] = "bonus_cat_defend",
+        ["Skill20%"] = "bonus_skill_20_percent",
+    }
+
+    local SUSIE_RIBBON_REJECTION_KEYS = {
+        monarchrbn = "item_monarchrbn_susieRejection",
+        redribbon = "item_redribbon_susieRejection",
     }
 
     local NOELLE_SPECIAL_TITLE_KEYS = {
@@ -567,6 +584,25 @@ return function(ctx)
             end)
             hookMethod(EnemyBattler, "registerShortActFor", function(orig, battler, char, name, description, ...)
                 return orig(battler, char, resolveDisplayText(name), resolveDisplayText(description), ...)
+            end)
+        end
+
+        -- These two ribbon items return a Susie-only rejection directly from
+        -- their own Item subclasses, so they bypass Item:getReaction(). Susie
+        -- overrides PartyMember:getReaction, so hook her registered class.
+        local susie = Registry.getPartyMember("susie")
+        if susie then
+            HookSystem.hook(susie, "getReaction", function(orig, member, item, user)
+                if Game:getLanguage() == "zh_hans"
+                    and user and user.id == "susie"
+                    and item
+                    and not member:getFlag("can_wear_ribbons", false) then
+                    local key = SUSIE_RIBBON_REJECTION_KEYS[item.id]
+                    if key then
+                        return Game:loc(key)
+                    end
+                end
+                return orig(member, item, user)
             end)
         end
 

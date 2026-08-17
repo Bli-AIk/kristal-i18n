@@ -209,8 +209,6 @@ return function(ctx)
         ensureLanguageGlobals()
         Game:loadLang(Game.lang)
 
-        Game.hasXtraConfig = (Utils.getAnyCase(Mod.libs, "xtractrl") and true) or false
-
         migrateSaveFileRoomNames()
 
         HookSystem.hook(Assets, "getFont", function(orig, path, size)

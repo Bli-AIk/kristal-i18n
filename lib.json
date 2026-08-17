@@ -2,7 +2,7 @@
     "id": "kristalI18n",
     "authors": ["Aik"],
     "version": "0.4.1", // x-release-please-version
-    "engineVer": "v0.10.0",
+    "engineVer": "v0.11.0-dev",
     "config": {
         "defaultLanguage": "en",
         "defaultNameLanguage": "en",
