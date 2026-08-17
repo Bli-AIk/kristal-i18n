@@ -143,6 +143,8 @@
  "debug_reload_engine": "重载引擎。",
  "debug_noclip": "穿墙",
  "debug_noclip_description": "切换与实体障碍的交互。",
+ "debug_invincibility": "无敌",
+ "debug_toggle_invincibility": "切换无敌状态。",
  "debug_give_item_description": "给予一个物品。",
  "debug_give_money": "给予金钱",
  "debug_give_money_description": "给予一定数量的金钱。",

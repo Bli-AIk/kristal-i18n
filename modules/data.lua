@@ -93,6 +93,8 @@ return function(ctx)
         ["Reload the engine."] = "debug_reload_engine",
         ["Noclip"] = "debug_noclip",
         ["Toggle interaction with solids."] = "debug_noclip_description",
+        ["Invincibility"] = "debug_invincibility",
+        ["Toggle invincibility."] = "debug_toggle_invincibility",
         ["Give an item."] = "debug_give_item_description",
         ["Give Money"] = "debug_give_money",
         ["Give an amount of money."] = "debug_give_money_description",

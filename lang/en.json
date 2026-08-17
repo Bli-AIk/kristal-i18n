@@ -143,6 +143,8 @@
  "debug_reload_engine": "Reload the engine.",
  "debug_noclip": "Noclip",
  "debug_noclip_description": "Toggle interaction with solids.",
+ "debug_invincibility": "Invincibility",
+ "debug_toggle_invincibility": "Toggle invincibility.",
  "debug_give_item_description": "Give an item.",
  "debug_give_money": "Give Money",
  "debug_give_money_description": "Give an amount of money.",
