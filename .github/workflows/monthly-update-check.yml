@@ -1,0 +1,37 @@
+name: monthly-update-check
+
+on:
+  schedule:
+    - cron: '0 1 * * *'    # daily 版本检测：每日 01:00 UTC（09:00 东八）
+    - cron: '30 1 1 * *'   # monthly 兜底：每月 1 号 01:30 UTC（09:30 东八）
+  workflow_dispatch: {}
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      MODE: table
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine run mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            CRON="$(jq -r .schedule < "$GITHUB_EVENT_PATH")"
+            if [ "$CRON" = "30 1 1 * *" ]; then
+              echo "mode=monthly" >> "$GITHUB_OUTPUT"
+            else
+              echo "mode=daily" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "mode=monthly" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run monthly update check
+        run: bash .github/scripts/monthly-update-check.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_MODE: ${{ steps.mode.outputs.mode }}
