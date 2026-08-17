@@ -79,6 +79,10 @@ return function(ctx)
     local resolveFileNamerOptions = hooks.resolveFileNamerOptions
     local resolveListMenuValues = hooks.resolveListMenuValues
 
+    -- Expose the CJK module to the optional hook scripts (the dark config
+    -- menu bakes label spacing at setText time and needs the same settings).
+    _G.kristalI18nCjk = cjk
+
     -- Searches the currently loaded language tables, then every other available
     -- language table, for a key whose value matches the stored room name. This
     -- lets old Chinese saves be migrated even when the game is currently

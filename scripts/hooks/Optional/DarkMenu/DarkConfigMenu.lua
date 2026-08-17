@@ -2,6 +2,7 @@ local DarkConfigMenu, super = HookSystem.hookScript(DarkConfigMenu)
 local DarkConfigBooleanOption, boolean_super = HookSystem.hookScript(DarkConfigBooleanOption)
 local DarkConfigBorderOption, border_super = HookSystem.hookScript(DarkConfigBorderOption)
 local DarkConfigRebindState = HookSystem.hookScript(DarkConfigRebindState)
+local cjk = _G.kristalI18nCjk
 
 local CONFIG_OPTION_IDS = {
     ["Master Volume"] = "master_volume_config",
@@ -61,14 +62,24 @@ local function refreshLabels(self)
         return
     end
 
-    self.config_text:setText(Game:loc("config"))
-    for _, option in ipairs(self.options or {}) do
-        local id = option.i18n_text_id or CONFIG_OPTION_IDS[option.name]
-        if id then
-            option.i18n_text_id = id
-            option.name = Game:loc(id)
-            option.text:setText(option.name)
+    -- Config labels are Text objects, so the CJK spacing is baked in at
+    -- setText time; use half the regular spacing like the other dark menus.
+    local saved = cjk.settings.cjkFixedTextSpacing
+    cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+    local ok, result = xpcall(function()
+        self.config_text:setText(Game:loc("config"))
+        for _, option in ipairs(self.options or {}) do
+            local id = option.i18n_text_id or CONFIG_OPTION_IDS[option.name]
+            if id then
+                option.i18n_text_id = id
+                option.name = Game:loc(id)
+                option.text:setText(option.name)
+            end
         end
+    end, debug.traceback)
+    cjk.settings.cjkFixedTextSpacing = saved
+    if not ok then
+        error(result)
     end
     self.i18n_menu_language = Game:getLanguage()
 end
@@ -172,39 +183,48 @@ function DarkConfigLanguageState:onUpdate()
 end
 
 function DarkConfigLanguageState:onDraw()
-    local menu = self.menu
-    local font = Assets.getFont("main")
-    love.graphics.setFont(font)
-    Draw.setColor(PALETTE["world_text"])
-    love.graphics.printf(Game:loc("language_settings_config"), 0, -12, menu.width, "center")
-
-    local labels = {
-        Game:loc("text_language_config"),
-        Game:loc("name_language_config"),
-        Game:loc("back_config"),
-    }
-    local values = {
-        Game:getLanguageName(),
-        Game:getNameLanguageName(),
-        nil,
-    }
-    local label_x = 88
-    local value_right = menu.width - label_x
-
-    for index, label in ipairs(labels) do
+    -- Draw the language screen with half the regular CJK spacing as well.
+    local saved = cjk.settings.cjkFixedTextSpacing
+    cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+    local ok, result = xpcall(function()
+        local menu = self.menu
+        local font = Assets.getFont("main")
+        love.graphics.setFont(font)
         Draw.setColor(PALETTE["world_text"])
-        local y = 38 + ((index - 1) * menu:getOptionHeight())
-        love.graphics.print(label, label_x, y)
+        love.graphics.printf(Game:loc("language_settings_config"), 0, -12, menu.width, "center")
 
-        if values[index] then
-            local value, scale = StringUtils.squishAndTrunc(values[index], font, 150, nil, 0.5)
-            love.graphics.print(value, value_right - (font:getWidth(value) * scale), y, 0, scale, 1)
+        local labels = {
+            Game:loc("text_language_config"),
+            Game:loc("name_language_config"),
+            Game:loc("back_config"),
+        }
+        local values = {
+            Game:getLanguageName(),
+            Game:getNameLanguageName(),
+            nil,
+        }
+        local label_x = 88
+        local value_right = menu.width - label_x
+
+        for index, label in ipairs(labels) do
+            Draw.setColor(PALETTE["world_text"])
+            local y = 38 + ((index - 1) * menu:getOptionHeight())
+            love.graphics.print(label, label_x, y)
+
+            if values[index] then
+                local value, scale = StringUtils.squishAndTrunc(values[index], font, 150, nil, 0.5)
+                love.graphics.print(value, value_right - (font:getWidth(value) * scale), y, 0, scale, 1)
+            end
         end
-    end
 
-    Draw.setColor(Game:getSoulColor())
-    Draw.draw(menu.heart_sprite, 63, 48 + ((self.currently_selected - 1) * menu:getOptionHeight()))
-    Draw.setColor(1, 1, 1, 1)
+        Draw.setColor(Game:getSoulColor())
+        Draw.draw(menu.heart_sprite, 63, 48 + ((self.currently_selected - 1) * menu:getOptionHeight()))
+        Draw.setColor(1, 1, 1, 1)
+    end, debug.traceback)
+    cjk.settings.cjkFixedTextSpacing = saved
+    if not ok then
+        error(result)
+    end
 end
 
 function DarkConfigMenu:addExitOptions()
@@ -234,26 +254,42 @@ function DarkConfigMenu:update()
 end
 
 function DarkConfigBooleanOption:draw()
-    boolean_super.super.draw(self)
+    local saved = cjk.settings.cjkFixedTextSpacing
+    cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+    local ok, result = xpcall(function()
+        boolean_super.super.draw(self)
 
-    Draw.setColor(PALETTE["world_text"])
-    love.graphics.setFont(Assets.getFont("main"))
-    love.graphics.print(self.enabled and Game:loc("on") or Game:loc("off"), 348, 0)
+        Draw.setColor(PALETTE["world_text"])
+        love.graphics.setFont(Assets.getFont("main"))
+        love.graphics.print(self.enabled and Game:loc("on") or Game:loc("off"), 348, 0)
+    end, debug.traceback)
+    cjk.settings.cjkFixedTextSpacing = saved
+    if not ok then
+        error(result)
+    end
 end
 
 function DarkConfigBorderOption:draw()
-    border_super.super.draw(self)
+    local saved = cjk.settings.cjkFixedTextSpacing
+    cjk.settings.cjkFixedTextSpacing = cjk.settings.cjkTitleTextSpacing
+    local ok, result = xpcall(function()
+        border_super.super.draw(self)
 
-    if self.selected then
-        Draw.setColor(PALETTE["world_text_selected"])
-    else
-        Draw.setColor(PALETTE["world_text"])
+        if self.selected then
+            Draw.setColor(PALETTE["world_text_selected"])
+        else
+            Draw.setColor(PALETTE["world_text"])
+        end
+
+        love.graphics.setFont(Assets.getFont("main"))
+        local name = Kristal.getBorderName()
+        local id = BORDER_NAME_IDS[name]
+        love.graphics.print(id and Game:loc(id) or name, 348, 0)
+    end, debug.traceback)
+    cjk.settings.cjkFixedTextSpacing = saved
+    if not ok then
+        error(result)
     end
-
-    love.graphics.setFont(Assets.getFont("main"))
-    local name = Kristal.getBorderName()
-    local id = BORDER_NAME_IDS[name]
-    love.graphics.print(id and Game:loc(id) or name, 348, 0)
 end
 
 function DarkConfigRebindState:onDraw()
