@@ -37,10 +37,12 @@ return function(ctx)
         ["Coldness"] = "coldness_stat",
         ["Boldness"] = "boldness_stat",
         ["Kindness"] = "kindness_stat",
+        ["Dog:"] = "dog_stat",
         ["Dogness"] = "dogness_stat",
         ["Crudeness"] = "crudeness_stat",
         ["Purple"] = "purple_stat",
         ["Sweetness"] = "sweetness_stat",
+        ["* Healing"] = "healing_stat",
         -- Susie's chapter 2 joke value next to "Purple".
         ["Yes"] = "yes",
     }
