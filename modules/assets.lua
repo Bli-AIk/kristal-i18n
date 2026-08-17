@@ -162,6 +162,12 @@ return function(ctx)
         local paths = {}
         for _, variant in ipairs(variants) do
             paths[#paths + 1] = "lang/" .. lang .. "/" .. name_language .. "/" .. variant
+            if name_language ~= lang then
+                -- Name-language-native layer: `lang/<name>/<name>/...` assets
+                -- (e.g. the party name sprites) apply whenever the name
+                -- language matches, even if the text language differs.
+                paths[#paths + 1] = "lang/" .. name_language .. "/" .. name_language .. "/" .. variant
+            end
             paths[#paths + 1] = "lang/" .. lang .. "/" .. variant
         end
 

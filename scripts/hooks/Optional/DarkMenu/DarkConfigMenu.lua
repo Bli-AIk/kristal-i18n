@@ -203,6 +203,14 @@ function DarkConfigLanguageState:onDraw()
             Game:getNameLanguageName(),
             nil,
         }
+        -- Language display names are written in their own language, so draw
+        -- them with that language's font when one exists (e.g. 简体中文 even
+        -- while the text language is English).
+        local value_languages = {
+            Game:getLanguages()[Game.langSelected],
+            Game:getNameLanguages()[Game.langNameLanguageSelected],
+            nil,
+        }
         local label_x = 88
         local value_right = menu.width - label_x
 
@@ -212,8 +220,13 @@ function DarkConfigLanguageState:onDraw()
             love.graphics.print(label, label_x, y)
 
             if values[index] then
-                local value, scale = StringUtils.squishAndTrunc(values[index], font, 150, nil, 0.5)
-                love.graphics.print(value, value_right - (font:getWidth(value) * scale), y, 0, scale, 1)
+                local value_font = value_languages[index]
+                    and Assets.getFont("lang/" .. value_languages[index] .. "/main")
+                    or font
+                local value, scale = StringUtils.squishAndTrunc(values[index], value_font, 150, nil, 0.5)
+                love.graphics.setFont(value_font)
+                love.graphics.print(value, value_right - (value_font:getWidth(value) * scale), y, 0, scale, 1)
+                love.graphics.setFont(font)
             end
         end
 

@@ -216,7 +216,22 @@ return function(ctx)
         migrateSaveFileRoomNames()
 
         HookSystem.hook(Assets, "getFont", function(orig, path, size)
-            local lang_path = "lang/" .. (Game.lang or FALLBACK_LANGUAGE) .. "/" .. path
+            -- Names can use a different language from the UI. Prefer the
+            -- Chinese font whenever either active language is Chinese, so
+            -- mixed-language menus do not fall through to ja_main.
+            if type(path) ~= "string" or path:sub(1, 5) == "lang/" then
+                return orig(path, size)
+            end
+
+            local text_language = Game.lang or FALLBACK_LANGUAGE
+            if text_language == "zh_hans" or Game.langNameLanguage == "zh_hans" then
+                local chinese_font = orig("lang/zh_hans/" .. path, size)
+                if chinese_font then
+                    return chinese_font
+                end
+            end
+
+            local lang_path = "lang/" .. text_language .. "/" .. path
             return orig(lang_path, size) or orig(path, size)
         end)
 
