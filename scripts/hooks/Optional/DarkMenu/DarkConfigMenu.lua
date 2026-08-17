@@ -188,15 +188,17 @@ function DarkConfigLanguageState:onDraw()
         Game:getNameLanguageName(),
         nil,
     }
+    local label_x = 88
+    local value_right = menu.width - label_x
 
     for index, label in ipairs(labels) do
         Draw.setColor(PALETTE["world_text"])
         local y = 38 + ((index - 1) * menu:getOptionHeight())
-        love.graphics.print(label, 88, y)
+        love.graphics.print(label, label_x, y)
 
         if values[index] then
             local value, scale = StringUtils.squishAndTrunc(values[index], font, 150, nil, 0.5)
-            love.graphics.print(value, 348, y, 0, scale, 1)
+            love.graphics.print(value, value_right - (font:getWidth(value) * scale), y, 0, scale, 1)
         end
     end
 
