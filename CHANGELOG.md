@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.4.1...v0.5.0) (2026-08-18)
+
+
+### Features
+
+* **i18n:** name-language font handling ([1dfa963](https://github.com/Bli-AIk/kristal-i18n/commit/1dfa96341a8cc5c8ae9619cd43579f995186f8d2))
+* **i18n:** support Kristal 0.11.0-dev ([efc19a2](https://github.com/Bli-AIk/kristal-i18n/commit/efc19a28a0ee724dc80d36558d0a2c224264accf))
+* support Kristal 0.11.0-dev ([e8152c2](https://github.com/Bli-AIk/kristal-i18n/commit/e8152c2c73357b8d84ec9f4df74f54a971a11666))
+
+
+### Bug Fixes
+
+* **cjk:** halve CJK spacing in dark config menu ([1a61685](https://github.com/Bli-AIk/kristal-i18n/commit/1a6168505944464099afae3eb0c15c3588f555aa))
+* **cjk:** halve CJK spacing in dark power and equip menus ([53dbf8b](https://github.com/Bli-AIk/kristal-i18n/commit/53dbf8ba44a66b782b7cac411c3cff649dbcca9c))
+* **i18n:** align language settings menu ([c6e58cf](https://github.com/Bli-AIk/kristal-i18n/commit/c6e58cfc6ca1680ad4d4422da90d86ded6636bbc))
+* **i18n:** balance language settings layout ([a79c5ac](https://github.com/Bli-AIk/kristal-i18n/commit/a79c5ac4605360d57b10537b607f8e43a0730c68))
+* **i18n:** localize healing and dog power stats ([d5669ee](https://github.com/Bli-AIk/kristal-i18n/commit/d5669eeb4ed65df4bdeb249b9bbd61ea35b7c9a2))
+* **i18n:** restore asterisk on healing stat ([7a1d372](https://github.com/Bli-AIk/kristal-i18n/commit/7a1d372e33bae995467e95b8a18c4eaa27d5e7c9))
+* **i18n:** shorten character names label ([2d245b1](https://github.com/Bli-AIk/kristal-i18n/commit/2d245b145825525750fb840d52e1d590b7359546))
+* **i18n:** translate debug invincibility options ([d0607fc](https://github.com/Bli-AIk/kristal-i18n/commit/d0607fceadcdca419d789e2e2373bee1fdbf4112))
+
 ## [0.4.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.4.0...v0.4.1) (2026-08-13)
 
 
