@@ -109,7 +109,7 @@ Game:loc("room1.hello", {name = "Kris"})   -- with variables
 - **Choices**: `cutscene:choicer({"{choice.yes}", "{choice.no}"})`
 - **Variables**: write `[var:name]` in text, pass values via `Game:loc("key", {name = "Kris"})`
 - **Mixed text**: `cutscene:text("* {name_susie} threw a punch!")` — only the braced parts are translated
-- **Asset overrides**: put fonts, sprites, and audio under `lang/<language>/...` paths for automatic per-language switching
+- **Asset overrides**: put fonts, sprites, and audio under `lang/<language>/...` paths for automatic per-language switching. Textures also support a name-language layer (`lang/<text-language>/<name-language>/...`); when the name language differs from the text language, assets in the name language's own layer (`lang/<name-language>/<name-language>/...`, e.g. the bundled Chinese party name sprites) still apply
 
 ## Configuration
 

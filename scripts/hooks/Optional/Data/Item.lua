@@ -1,5 +1,12 @@
 local Item, super = HookSystem.hookScript(Item)
 
+local function loc(key, fallback, var)
+    if Game.hasStr and Game:hasStr(key) then
+        return Game:loc(key, var)
+    end
+    return fallback
+end
+
 function Item:onCheck()
     if type(self:getCheck()) == "table" then
         local text
@@ -89,11 +96,15 @@ local function resolveChapterKey(key, item, current_language_only)
     return nil
 end
 
-local function locChapter(key, item)
-    return Game:loc(resolveChapterKey(key, item) or key)
+local function locChapter(key, item, fallback)
+    local localized_key = resolveChapterKey(key, item)
+    if localized_key then
+        return Game:loc(localized_key)
+    end
+    return fallback
 end
 
-function Item:getName()     return Game:loc("item_"..self.id.."_name") end
+function Item:getName() return loc("item_"..self.id.."_name", self.name) end
 
 -- `useName` is an optional battle-only override. Without it, battle text
 -- uses the localized canonical `name`; other item fields remain independent.
@@ -108,18 +119,26 @@ end
 
 -- `description` is menu text and `check` is inspect text. They may match,
 -- but one must not be used as the other's fallback.
-function Item:getDescription() return locChapter("item_"..self.id.."_description", self) end
-function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect", self) end
-function Item:getCheck() return Game:loc("item_"..self.id.."_check") end
+function Item:getDescription() return locChapter("item_"..self.id.."_description", self, self.description) end
+function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect", self, self.effect) end
+function Item:getCheck() return loc("item_"..self.id.."_check", self.check) end
 
 -- Shop lookups are per item, even when the template text repeats.
 function Item:getShopDescription()
-    return Game:loc("item_"..self.id.."_shopDesc", {typeName = self:getTypeName(), shopName = Game:loc("item_"..self.id.."_shopName")})
+    local description_key = "item_"..self.id.."_shopDesc"
+    local name_key = "item_"..self.id.."_shopName"
+    if Game.hasStr and Game:hasStr(description_key) and Game:hasStr(name_key) then
+        return Game:loc(description_key, {typeName = self:getTypeName(), shopName = Game:loc(name_key)})
+    end
+    return self:getTypeName() .. "\n" .. (self.shop or "")
 end
 
 function Item:getBattleText(user, target)
     local key = Game:hasStr("item_"..self.id.."_battleText") and "item_"..self.id.."_battleText" or "item_battleText"
-    return Game:loc(key, {charaName = user.chara:getName(), useName = self:getUseName()})
+    return loc(key, "* " .. user.chara:getName() .. " used the " .. self:getUseName() .. "!", {
+        charaName = user.chara:getName(),
+        useName = self:getUseName()
+    })
 end
 
 function Item:getReaction(user_id, reactor_id)
