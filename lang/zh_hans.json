@@ -131,6 +131,7 @@
  "debug_battle_kill_party": "CTRL+B - 击杀全队",
  "debug_battle_fill_tension": "CTRL+K - 填满 TP",
  "debug_battle_toggle_noclip": "CTRL+N - 切换穿墙",
+ "debug_battle_toggle_invincibility": "CTRL+I - 切换无敌",
  "debug_object_selection_title": "~ 对象选择器 ~",
  "debug_hotswap": "热替换",
  "debug_hotswap_description": "从文件中替换代码。可能不稳定。",

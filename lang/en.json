@@ -131,6 +131,7 @@
  "debug_battle_kill_party": "CTRL+B - kill party",
  "debug_battle_fill_tension": "CTRL+K - fill tension",
  "debug_battle_toggle_noclip": "CTRL+N - toggle noclip",
+ "debug_battle_toggle_invincibility": "CTRL+I - toggle invincibility",
  "debug_object_selection_title": "~ OBJECT SELECTION ~",
  "debug_hotswap": "Hotswap",
  "debug_hotswap_description": "Swap out code from the files. Might be unstable.",

@@ -81,6 +81,7 @@ return function(ctx)
         ["CTRL+B - kill party"] = "debug_battle_kill_party",
         ["CTRL+K - fill tension"] = "debug_battle_fill_tension",
         ["CTRL+N - toggle noclip"] = "debug_battle_toggle_noclip",
+        ["CTRL+I - toggle invincibility"] = "debug_battle_toggle_invincibility",
         ["~ OBJECT SELECTION ~"] = "debug_object_selection_title",
         ["Hotswap"] = "debug_hotswap",
         ["Swap out code from the files. Might be unstable."] = "debug_hotswap_description",
