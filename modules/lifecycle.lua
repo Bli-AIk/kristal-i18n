@@ -977,6 +977,14 @@ return function(ctx)
         if refresh_assets ~= false then
             refreshLocalizedAssets()
         end
+
+        -- Debug menu option names are baked in when the menus are (re)built;
+        -- the engine only rebuilds them on game load, so rebuild them here too
+        -- or they would stay in the previous language.
+        if Kristal and Kristal.DebugSystem then
+            Kristal.DebugSystem:refresh()
+        end
+
         return true
     end
 
