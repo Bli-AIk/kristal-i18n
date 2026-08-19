@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.1...v0.5.2) (2026-08-19)
+
+
+### Bug Fixes
+
+* **i18n:** rebuild debug system menus on language switch ([e18e217](https://github.com/Bli-AIk/kristal-i18n/commit/e18e2170f4cd4f1dc1e9c4b79f0a78f74add7ca0))
+
 ## [0.5.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.0...v0.5.1) (2026-08-19)
 
 
