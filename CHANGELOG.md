@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.0...v0.5.1) (2026-08-19)
+
+
+### Bug Fixes
+
+* **i18n:** translate F6 battle overlay invincibility hint ([9a39f44](https://github.com/Bli-AIk/kristal-i18n/commit/9a39f440a4d61bae26fe6d1b099c266199b246d3))
+
 ## [0.5.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.4.1...v0.5.0) (2026-08-18)
 
 
