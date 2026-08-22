@@ -1,46 +1,38 @@
 {
-    "alphys": {
-        "en": "Alphys",
-        "zh_hans": "艾菲斯"
-    },
-    "frisk": {
-        "en": "Frisk",
-        "zh_hans": "弗里斯克"
-    },
-    "froggit": {
-        "en": "Froggit",
-        "zh_hans": "蛙吉特"
-    },
-    "moldsmal": {
-        "en": "Moldsmal",
-        "zh_hans": "小模怪"
-    },
-    "mettaton": {
-        "en": "Mettaton",
-        "zh_hans": "镁塔顿"
-    },
-    "temmie": {
-        "en": "Temmie",
-        "zh_hans": "提米"
-    },
-    "kris": {
-        "en": "Kris",
-        "zh_hans": "克里斯"
-    },
-    "susie": {
-        "en": "Susie",
-        "zh_hans": "苏西"
-    },
-    "ralsei": {
-        "en": "Ralsei",
-        "zh_hans": "利艾尔斯"
-    },
-    "noelle": {
-        "en": "Noelle",
-        "zh_hans": "诺艾尔"
-    },
-    "starwalker": {
-        "en": "Starwalker",
-        "zh_hans": "星之行者"
-    }
+  "alphys": {
+    "en": "Alphys",
+    "zh_hans": "艾菲斯"
+  },
+  "frisk": {
+    "en": "Frisk",
+    "zh_hans": "弗里斯克"
+  },
+  "mettaton": {
+    "en": "Mettaton",
+    "zh_hans": "镁塔顿"
+  },
+  "temmie": {
+    "en": "Temmie",
+    "zh_hans": "提米"
+  },
+  "kris": {
+    "en": "Kris",
+    "zh_hans": "克里斯"
+  },
+  "susie": {
+    "en": "Susie",
+    "zh_hans": "苏西"
+  },
+  "ralsei": {
+    "en": "Ralsei",
+    "zh_hans": "利艾尔斯"
+  },
+  "noelle": {
+    "en": "Noelle",
+    "zh_hans": "诺艾尔"
+  },
+  "starwalker": {
+    "en": "Starwalker",
+    "zh_hans": "星之行者"
+  }
 }
