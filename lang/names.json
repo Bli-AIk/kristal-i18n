@@ -1,7 +1,19 @@
 {
+    "alphys": {
+        "en": "Alphys",
+        "zh_hans": "艾菲斯"
+    },
     "frisk": {
         "en": "Frisk",
         "zh_hans": "弗里斯克"
+    },
+    "mettaton": {
+        "en": "Mettaton",
+        "zh_hans": "镁塔顿"
+    },
+    "temmie": {
+        "en": "Temmie",
+        "zh_hans": "提米"
     },
     "kris": {
         "en": "Kris",
