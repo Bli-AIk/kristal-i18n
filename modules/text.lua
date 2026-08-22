@@ -997,9 +997,21 @@ return function(ctx)
         local merged = {}
         local bases = {}
 
+        -- 1) This library's own lang dir (kristalI18n's own data).
         if library.info and library.info.path then
             table.insert(bases, library.info.path)
         end
+        -- 2) Any other loaded library that ships its own lang/ data (e.g. a
+        --    fork-localized content library). Merged in library iteration
+        --    order; the i18n library itself is skipped to avoid double add.
+        if Kristal and Kristal.iterLibraries then
+            for _, lib in Kristal.iterLibraries() do
+                if lib.info and lib.info.path and lib.info.path ~= (library.info and library.info.path) then
+                    table.insert(bases, lib.info.path)
+                end
+            end
+        end
+        -- 3) The running mod won't have it last; mod data overrides libraries.
         if Mod and Mod.info and Mod.info.path then
             table.insert(bases, Mod.info.path)
         end
