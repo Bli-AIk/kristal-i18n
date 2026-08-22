@@ -119,9 +119,23 @@ end
 
 -- `description` is menu text and `check` is inspect text. They may match,
 -- but one must not be used as the other's fallback.
+-- A table-form `check` is multi-page: the first page is `item_<id>_check`
+-- (the engine prepends `* "<name>" - `), each following page is
+-- `item_<id>_check_<n>`, displayed verbatim on its own page.
 function Item:getDescription() return locChapter("item_"..self.id.."_description", self, self.description) end
 function Item:getBattleDescription() return locChapter("item_"..self.id.."_effect", self, self.effect) end
-function Item:getCheck() return loc("item_"..self.id.."_check", self.check) end
+function Item:getCheck()
+    if type(self.check) == "table" then
+        local pages = {}
+        for i, page in ipairs(self.check) do
+            local key = "item_" .. self.id .. "_check"
+            if i > 1 then key = key .. "_" .. i end
+            pages[i] = loc(key, page)
+        end
+        return pages
+    end
+    return loc("item_" .. self.id .. "_check", self.check)
+end
 
 -- Shop lookups are per item, even when the template text repeats.
 function Item:getShopDescription()
