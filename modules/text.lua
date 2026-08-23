@@ -142,6 +142,10 @@ return function(ctx)
                     local id = tostring(item.id or registry_id)
                     local suffix = getItemTextVariantSuffix(item)
                     addItemTextLookup(item.name, id, "name", suffix)
+                    -- `use_name` is an alternate source name used by item-use
+                    -- text. It intentionally resolves to the canonical
+                    -- `item_<id>_name` localization key.
+                    addItemTextLookup(item.use_name, id, "name", suffix)
                     addItemTextLookup(item.description, id, "description", suffix)
                 end
             end
