@@ -473,6 +473,8 @@
  "item_glowshard_battleText": "* [var:charaName]使用了[var:useName]！",
  "item_glowshard_battleNothing": "* 但什么也没有发生...",
  "item_light/ball_of_junk_name": "垃圾球",
+ "item_light/ball_of_junk_shortName": "垃圾球",
+ "item_light/ball_of_junk_seriousName": "垃圾",
  "item_light/ball_of_junk_description": "你口袋里的一颗\n由各种杂物攒成的小球。",
  "item_light/ball_of_junk_description_chapter_1": "一颗由各种杂物攒成的小球。",
  "item_light/ball_of_junk_effect": "",
