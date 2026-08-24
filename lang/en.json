@@ -474,6 +474,8 @@
  "item_glowshard_battleText": "* [var:charaName] used the [var:useName]!",
  "item_glowshard_battleNothing": "* But nothing happened...",
  "item_light/ball_of_junk_name": "Ball of Junk",
+ "item_light/ball_of_junk_shortName": "JunkBall",
+ "item_light/ball_of_junk_seriousName": "Junk",
  "item_light/ball_of_junk_useName": "BALL OF JUNK",
  "item_light/ball_of_junk_description": "A small ball of accumulated things in your pocket.",
  "item_light/ball_of_junk_description_chapter_1": "A small ball of accumulated things.",

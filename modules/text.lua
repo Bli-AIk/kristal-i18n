@@ -142,6 +142,10 @@ return function(ctx)
                     local id = tostring(item.id or registry_id)
                     local suffix = getItemTextVariantSuffix(item)
                     addItemTextLookup(item.name, id, "name", suffix)
+                    -- `use_name` is an alternate source name used by item-use
+                    -- text. It intentionally resolves to the canonical
+                    -- `item_<id>_name` localization key.
+                    addItemTextLookup(item.use_name, id, "name", suffix)
                     addItemTextLookup(item.description, id, "description", suffix)
                 end
             end
@@ -424,19 +428,33 @@ return function(ctx)
         return nil
     end
 
-    local function localizeStaticTextValue(value)
+    local recursion_penalty = false
+
+    local function localizeStaticTextValue(value, depth)
+        depth = depth or 0
+        -- Safety net for the line-by-line resolution below: a multiline static
+        -- value whose lines keep mapping to other multiline values could
+        -- recurse indefinitely. Falling back to the source text beats crashing.
+        if depth > 12 then
+            if not recursion_penalty then
+                recursion_penalty = true
+                print("[kristal-i18n] localization recursion guard hit on: " .. tostring(value))
+            end
+            return value
+        end
+
         if type(value) == "table" then
             if isClassInstance(value) or isColorTable(value) then
                 return value
             end
 
             if isTextDescriptor(value) then
-                return localizeStaticTextValue(resolveTextInput(value))
+                return localizeStaticTextValue((resolveTextInput(value)), depth + 1)
             end
 
             local out = {}
             for key, item in pairs(value) do
-                out[key] = localizeStaticTextValue(item)
+                out[key] = localizeStaticTextValue(item, depth + 1)
             end
             return out
         end
@@ -449,7 +467,7 @@ return function(ctx)
                 local matched = false
                 for line in static:gmatch("[^\n]+") do
                     local trimmed_line = line:gsub("%s+$", "")
-                    local localized = localizeStaticTextValue(trimmed_line)
+                    local localized = localizeStaticTextValue(trimmed_line, depth + 1)
                     if localized ~= trimmed_line then
                         matched = true
                     end
@@ -594,7 +612,7 @@ return function(ctx)
             return "--" .. Game:loc("shop_sold_out") .. "--"
         end
 
-        return localizeStaticTextValue(resolveTextInput(text))
+        return localizeStaticTextValue((resolveTextInput(text)))
     end
 
     local function hookShopDraw(shop_class)
@@ -625,11 +643,11 @@ return function(ctx)
     local function localizeDynamicStaticTextValue(value)
         if type(value) == "function" then
             return function(...)
-                return localizeStaticTextValue(resolveTextInput(value(...)))
+                return localizeStaticTextValue((resolveTextInput(value(...))))
             end
         elseif value ~= nil then
             return function()
-                return localizeStaticTextValue(resolveTextInput(value))
+                return localizeStaticTextValue((resolveTextInput(value)))
             end
         end
         return value
@@ -734,7 +752,7 @@ return function(ctx)
     end
 
     local function printCjkTextWithSpacing(orig, text, x, y, r, sx, sy, ox, oy, kx, ky)
-        text = localizeStaticTextValue(resolveTextInput(text))
+        text = localizeStaticTextValue((resolveTextInput(text)))
 
         if not shouldPrintWithCjkSpacing(text) then
             return orig(text, x, y, r, sx, sy, ox, oy, kx, ky)
@@ -773,7 +791,7 @@ return function(ctx)
     end
 
     local function printfCjkTextWithSpacing(print_orig, printf_orig, text, x, y, limit, align, r, sx, sy, ox, oy, kx, ky)
-        text = localizeStaticTextValue(resolveTextInput(text))
+        text = localizeStaticTextValue((resolveTextInput(text)))
 
         if not shouldPrintWithCjkSpacing(text) or text:find("\n", 1, true) then
             return printf_orig(text, x, y, limit, align, r, sx, sy, ox, oy, kx, ky)
@@ -983,9 +1001,21 @@ return function(ctx)
         local merged = {}
         local bases = {}
 
+        -- 1) This library's own lang dir (kristalI18n's own data).
         if library.info and library.info.path then
             table.insert(bases, library.info.path)
         end
+        -- 2) Any other loaded library that ships its own lang/ data (e.g. a
+        --    fork-localized content library). Merged in library iteration
+        --    order; the i18n library itself is skipped to avoid double add.
+        if Kristal and Kristal.iterLibraries then
+            for _, lib in Kristal.iterLibraries() do
+                if lib.info and lib.info.path and lib.info.path ~= (library.info and library.info.path) then
+                    table.insert(bases, lib.info.path)
+                end
+            end
+        end
+        -- 3) The running mod won't have it last; mod data overrides libraries.
         if Mod and Mod.info and Mod.info.path then
             table.insert(bases, Mod.info.path)
         end

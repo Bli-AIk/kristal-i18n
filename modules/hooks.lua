@@ -221,7 +221,7 @@ return function(ctx)
         if value == nil then
             return nil
         end
-        return localizeStaticTextValue(resolveTextInput(value, options))
+        return localizeStaticTextValue((resolveTextInput(value, options)))
     end
 
     local function localizeDebugItemOption(name, description)

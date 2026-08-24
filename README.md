@@ -103,6 +103,22 @@ Game:loc("room1.hello", {name = "Kris"})   -- with variables
 
 > ⚠️ **API is NOT compatible with the original LangLib**: the first argument of `Game:loc` is always an ID; LangLib's `Game:loc("fallback", "id")` form is not accepted. Missing IDs render as `<id> is missing`.
 
+## Content Library Integration
+
+Content libraries that receive a raw item name instead of an item object can
+resolve its existing localization key without rebuilding Kristal's Registry:
+
+```lua
+local i18n = Mod.libs["kristalI18n"]
+local key, item_id = i18n:getItemTextLocalizationKey(raw_name, "name", preferred_id)
+local localized_name = key and Game:loc(key) or raw_name
+```
+
+The method returns `key, item_id`, or `nil` when no loaded item localization
+matches. `field` is normally `"name"` or `"description"`; an item's
+`use_name` is recognized as a `"name"` alias. Supply `preferred_id` when
+shared source text would otherwise be ambiguous.
+
 ## More Tips
 
 - **Names**: define per-language names in `lang/names.json`, reference them with `[name:kris]` in text

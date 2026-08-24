@@ -102,6 +102,18 @@ Game:loc("room1.hello", {name = "Kris"})   -- 带变量
 
 > ⚠️ **API 与原版 LangLib 不兼容**：`Game:loc` 第一个参数永远是 ID，不接受 LangLib 的 `Game:loc("fallback", "id")` 写法。缺失 ID 会显示为 `<id> is missing`。
 
+## 内容库集成
+
+内容库如果只拿到原始道具名称，而没有道具对象，可以用以下接口查到已有的本地化 key，无需自己重建 Kristal Registry：
+
+```lua
+local i18n = Mod.libs["kristalI18n"]
+local key, item_id = i18n:getItemTextLocalizationKey(raw_name, "name", preferred_id)
+local localized_name = key and Game:loc(key) or raw_name
+```
+
+方法返回 `key, item_id`，如无已加载的道具翻译则返回 `nil`。`field` 通常为 `"name"` 或 `"description"`；道具的 `use_name` 会按 `"name"` 的别名处理。同一原文对应多个道具时，传入 `preferred_id` 消除歧义。
+
 ## 更多技巧
 
 - **角色名**：`lang/names.json` 里按语言给名字，文本中用 `[name:kris]` 引用

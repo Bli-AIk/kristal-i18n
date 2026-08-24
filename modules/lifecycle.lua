@@ -35,6 +35,7 @@ return function(ctx)
     local isClassInstance = text.isClassInstance
     local isColorTable = text.isColorTable
     local isTextDescriptor = text.isTextDescriptor
+    local getItemTextLocalizationKey = text.getItemTextLocalizationKey
     local localizeStaticTextValue = text.localizeStaticTextValue
     local localizeDynamicStaticTextValue = text.localizeDynamicStaticTextValue
     local resolveTextInput = text.resolveTextInput
@@ -82,6 +83,14 @@ return function(ctx)
     -- Expose the CJK module to the optional hook scripts (the dark config
     -- menu bakes label spacing at setText time and needs the same settings).
     _G.kristalI18nCjk = cjk
+
+    --- Finds the localization key for a raw registered item field.
+    --- `field` is normally "name" or "description". Item `use_name` values
+    --- are aliases for "name". Returns `key, item_id`, or nil when no loaded
+    --- localization entry matches. `preferred_id` disambiguates shared text.
+    function kristalI18n:getItemTextLocalizationKey(value, field, preferred_id)
+        return getItemTextLocalizationKey(value, field, preferred_id)
+    end
 
     -- Searches the currently loaded language tables, then every other available
     -- language table, for a key whose value matches the stored room name. This
