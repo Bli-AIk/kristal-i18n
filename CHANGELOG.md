@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 * **i18n:** expose stable item localization-key lookup for content libraries, including `use_name` aliases
 
+## [0.5.3](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.2...v0.5.3) (2026-08-24)
+
+
+### chore
+
+* force release 0.5.3 ([057498d](https://github.com/Bli-AIk/kristal-i18n/commit/057498db1436750239f3f7090ab76109d1ed848d))
+
 ## [0.5.2](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.1...v0.5.2) (2026-08-19)
 
 
