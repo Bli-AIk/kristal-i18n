@@ -743,6 +743,16 @@ return function(ctx)
         end
 
         if not localized then
+            -- Libraries announce themselves at init(), before this library's
+            -- console hooks exist; the English source below is the contract
+            -- they all emit (see modules/lifecycle.lua).
+            local library = plain:match("^%[System%] %[%u+%] Enabled library (.+)%.$")
+            if library then
+                localized = Game:loc("console_logger_library_enabled", { name = library })
+            end
+        end
+
+        if not localized then
             return value
         end
 

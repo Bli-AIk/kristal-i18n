@@ -60,6 +60,7 @@
  "console_logger_kristal_version": "[System] [INFO] Kristal v[var:version]",
  "console_logger_loading_save": "[System] [INFO] Loading save file [var:id] from path [var:path]",
  "console_logger_missing_save": "[System] [INFO] Save file [var:id] does not exist, starting new game.",
+ "console_logger_library_enabled": "[System] [INFO] Enabled library [var:name].",
  "debug_engine_options": "Engine Options",
  "debug_show_fps": "Show FPS",
  "debug_toggle_fps_display": "Toggle the FPS display.",

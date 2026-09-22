@@ -60,6 +60,7 @@
  "console_logger_kristal_version": "[System] [INFO] Kristal v[var:version]",
  "console_logger_loading_save": "[System] [INFO] 正在读取存档 [var:id]（路径：[var:path]）",
  "console_logger_missing_save": "[System] [INFO] 未找到存档 [var:id]，将开始新游戏。",
+ "console_logger_library_enabled": "[System] [INFO] 已启用 [var:name] 库。",
  "debug_engine_options": "引擎选项",
  "debug_show_fps": "显示 FPS",
  "debug_toggle_fps_display": "切换 FPS 显示。",

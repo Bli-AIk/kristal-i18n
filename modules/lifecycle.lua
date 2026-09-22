@@ -81,6 +81,17 @@ return function(ctx)
     local resolveFileNamerOptions = hooks.resolveFileNamerOptions
     local resolveListMenuValues = hooks.resolveListMenuValues
 
+    -- Libraries announce themselves through the engine's "System" logger, which
+    -- is the only path that yields the "[System] [INFO] " prefix. The line is
+    -- pushed before this library's console hooks exist, so it stays English
+    -- until refreshConsoleStartupHistory() re-runs localizeConsoleSegments()
+    -- over the console history (see modules/text.lua).
+    local function announceEnabled()
+        if Logging and Logging.info then
+            Logging.info("Enabled library " .. kristalI18n.info.id .. ".")
+        end
+    end
+
     -- Expose the CJK module to the optional hook scripts (the dark config
     -- menu bakes label spacing at setText time and needs the same settings).
     _G.kristalI18nCjk = cjk
@@ -170,6 +181,8 @@ return function(ctx)
         hookDebugSystemLocalization()
         hookRegistryItemCreation()
         hookFrameworkLocalization()
+
+        announceEnabled()
     end
 
     function kristalI18n:onKeyPressed(key, is_repeat)
