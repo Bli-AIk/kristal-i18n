@@ -785,6 +785,10 @@ return function(ctx)
             end
         end
 
+        for index, line in ipairs(console.history) do
+            console.history[index] = localizeConsoleSegments(line)
+        end
+
         console.__langlib_zh_startup_localized = true
     end
 
