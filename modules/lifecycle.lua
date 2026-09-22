@@ -862,12 +862,15 @@ return function(ctx)
         end
 
         if Console then
-            HookSystem.hook(Console, "print", function(orig, self, value, x, y)
+            HookSystem.hook(Console, "print", function(orig, self, value, x, y, align, alpha)
                 if Game.lang ~= "zh_hans" then
-                    return orig(self, value, x, y)
+                    return orig(self, value, x, y, align, alpha)
                 end
                 if value == nil then
                     return
+                end
+                if align ~= nil or alpha ~= nil then
+                    return orig(self, value, x, y, align, alpha)
                 end
 
                 local x_offset = 0
