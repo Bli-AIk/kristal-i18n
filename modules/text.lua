@@ -710,6 +710,40 @@ return function(ctx)
         return segments
     end
 
+    local function localizeConsoleSegments(value)
+        if type(value) ~= "table" then
+            return value
+        end
+
+        local plain = {}
+        for _, part in ipairs(value) do
+            if type(part) == "string" then
+                plain[#plain + 1] = part
+            end
+        end
+        plain = table.concat(plain)
+
+        local localized
+        local version = plain:match("^%[System%] %[%u+%] Kristal v(.+)$")
+        if version then
+            localized = Game:loc("console_logger_kristal_version", { version = version })
+        else
+            local id, path = plain:match("^%[System%] %[%u+%] Loading save file (%d+) from path (.+)$")
+            if id then
+                localized = Game:loc("console_logger_loading_save", { id = id, path = path })
+            elseif plain:match("^%[System%] %[%u+%] Save file %d+ does not exist, starting new game%.$") then
+                local save_id = plain:match("^%[System%] %[%u+%] Save file (%d+)")
+                localized = Game:loc("console_logger_missing_save", { id = save_id })
+            end
+        end
+
+        if not localized then
+            return value
+        end
+
+        return { value[1], localized }
+    end
+
     local function getConsoleHistoryPlainText(line)
         if type(line) ~= "table" then
             return tostring(line or "")
@@ -1351,6 +1385,7 @@ return function(ctx)
     M.localizeTextValue = localizeTextValue
     M.resolveTextInput = resolveTextInput
     M.consoleMarkupToSegments = consoleMarkupToSegments
+    M.localizeConsoleSegments = localizeConsoleSegments
     M.mergeTextOptions = mergeTextOptions
     M.normalizeCutsceneTextArgs = normalizeCutsceneTextArgs
     M.normalizeChoices = normalizeChoices

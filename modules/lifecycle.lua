@@ -71,6 +71,7 @@ return function(ctx)
     local hookRegistryItemCreation = hooks.hookRegistryItemCreation
     local hookFrameworkLocalization = hooks.hookFrameworkLocalization
     local resolveDisplayText = hooks.resolveDisplayText
+    local localizeConsoleSegments = text.localizeConsoleSegments
     local resolveGonerChoice = hooks.resolveGonerChoice
     local resolveGonerChoices = hooks.resolveGonerChoices
     local resolveTextList = hooks.resolveTextList
@@ -895,7 +896,7 @@ return function(ctx)
                 -- Logger lines arrive as segment arrays (ConsoleOutputListener);
                 -- only plain strings need translating / markup conversion.
                 if type(str) ~= "string" then
-                    return orig(self, str)
+                    return orig(self, localizeConsoleSegments and localizeConsoleSegments(str) or str)
                 end
 
                 local localized = resolveDisplayText(str)
