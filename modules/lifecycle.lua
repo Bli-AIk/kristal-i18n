@@ -889,6 +889,12 @@ return function(ctx)
             end)
 
             HookSystem.hook(Console, "push", function(orig, self, str)
+                -- Logger lines arrive as segment arrays (ConsoleOutputListener);
+                -- only plain strings need translating / markup conversion.
+                if type(str) ~= "string" then
+                    return orig(self, str)
+                end
+
                 local localized = resolveDisplayText(str)
                 if text.consoleMarkupToSegments then
                     localized = text.consoleMarkupToSegments(localized)
