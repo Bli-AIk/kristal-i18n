@@ -710,6 +710,34 @@ return function(ctx)
         return segments
     end
 
+    -- Every replacement below collapses a line into { first color, text }, which
+    -- recolors the whole line. A message that should keep the Logger's own
+    -- prefix colors ("[System]" cyan, "[INFO]" green) needs the segments instead:
+    -- keep the ones covering the first `offset` characters of the plain text and
+    -- append `tail` (a segment array) after them.
+    local function replaceConsoleTail(value, offset, tail)
+        local out, consumed = {}, 0
+        for _, part in ipairs(value) do
+            if consumed >= offset then
+                break
+            end
+
+            if type(part) == "table" then
+                out[#out + 1] = part
+            else
+                local text = tostring(part)
+                local room = offset - consumed
+                out[#out + 1] = text:sub(1, room)
+                consumed = consumed + math.min(#text, room)
+            end
+        end
+
+        for _, part in ipairs(tail) do
+            out[#out + 1] = part
+        end
+        return out
+    end
+
     local function localizeConsoleSegments(value)
         if type(value) ~= "table" then
             return value
@@ -744,11 +772,18 @@ return function(ctx)
 
         if not localized then
             -- Libraries announce themselves at init(), before this library's
-            -- console hooks exist; the English source below is the contract
-            -- they all emit (see modules/lifecycle.lua).
-            local library = plain:match("^%[System%] %[%u+%] Enabled library (.+)%.$")
-            if library then
-                localized = Game:loc("console_logger_library_enabled", { name = library })
+            -- console hooks exist; the English source below is the contract they
+            -- all emit (see modules/lifecycle.lua). Unlike the lines above, this
+            -- one keeps the "[System] [INFO] " prefix the Logger already colored
+            -- and only swaps the message after it, so the library name stays the
+            -- single highlighted part of the line.
+            local prefix, library = plain:match("^(%[System%] %[%u+%] )Enabled library (.+)%.$")
+            if prefix then
+                local tail = consoleMarkupToSegments(Game:loc("console_logger_library_enabled", { name = library }))
+                if type(tail) ~= "table" then
+                    tail = { tail }
+                end
+                return replaceConsoleTail(value, #prefix, tail)
             end
         end
 
