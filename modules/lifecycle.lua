@@ -889,7 +889,11 @@ return function(ctx)
             end)
 
             HookSystem.hook(Console, "push", function(orig, self, str)
-                return orig(self, resolveDisplayText(str))
+                local localized = resolveDisplayText(str)
+                if text.consoleMarkupToSegments then
+                    localized = text.consoleMarkupToSegments(localized)
+                end
+                return orig(self, localized)
             end)
             refreshConsoleStartupHistory()
         end
