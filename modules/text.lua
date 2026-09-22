@@ -724,10 +724,15 @@ return function(ctx)
         plain = table.concat(plain)
 
         local localized
+        local project = plain:match("^%[[^%]]+%] %[%u+%] Loaded (.+)!$")
+        if project then
+            localized = Game:loc("console_logger_loaded_project", { name = project })
+        end
+
         local version = plain:match("^%[System%] %[%u+%] Kristal v(.+)$")
-        if version then
+        if not localized and version then
             localized = Game:loc("console_logger_kristal_version", { version = version })
-        else
+        elseif not localized then
             local id, path = plain:match("^%[System%] %[%u+%] Loading save file (%d+) from path (.+)$")
             if id then
                 localized = Game:loc("console_logger_loading_save", { id = id, path = path })
