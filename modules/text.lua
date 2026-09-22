@@ -668,6 +668,48 @@ return function(ctx)
         end
     end
 
+    -- The console no longer parses [color:name] markup: Console:push now takes
+    -- an array of strings and color tables. Translations stay readable markup,
+    -- so convert them to the new segment format on the way in.
+    -- Resolved at call time: this module is also loaded by the standalone
+    -- luajit tests, where the engine's COLORS global does not exist.
+    local function consoleMarkupColor(name)
+        if name == "cyan" then
+            return { 0.5, 1, 1, 1 }
+        end
+
+        local colors = rawget(_G, "COLORS")
+        if colors and name ~= "reset" and colors[name] then
+            return colors[name]
+        end
+
+        return colors and colors.white or { 1, 1, 1, 1 }
+    end
+
+    local function consoleMarkupToSegments(text)
+        if type(text) ~= "string" or not text:find("[color:", 1, true) then
+            return text
+        end
+
+        local segments, pos = {}, 1
+        while true do
+            local start, stop, name = text:find("%[color:([%w_]+)%]", pos)
+            if not start then
+                break
+            end
+            if start > pos then
+                table.insert(segments, text:sub(pos, start - 1))
+            end
+            table.insert(segments, consoleMarkupColor(name))
+            pos = stop + 1
+        end
+        if pos <= #text then
+            table.insert(segments, text:sub(pos))
+        end
+
+        return segments
+    end
+
     local function getConsoleHistoryPlainText(line)
         if type(line) ~= "table" then
             return tostring(line or "")
@@ -708,7 +750,7 @@ return function(ctx)
 
         for _, message in ipairs(CONSOLE_STARTUP_MESSAGES) do
             if console.history[message.index] then
-                local parsed = parseConsoleHistoryLines(console, Game:loc(message.id))
+                local parsed = parseConsoleHistoryLines(console, consoleMarkupToSegments(Game:loc(message.id)))
                 console.history[message.index] = parsed[1] or { "" }
             end
         end
@@ -1312,6 +1354,7 @@ return function(ctx)
     M.localizeDynamicStaticTextValue = localizeDynamicStaticTextValue
     M.localizeTextValue = localizeTextValue
     M.resolveTextInput = resolveTextInput
+    M.consoleMarkupToSegments = consoleMarkupToSegments
     M.mergeTextOptions = mergeTextOptions
     M.normalizeCutsceneTextArgs = normalizeCutsceneTextArgs
     M.normalizeChoices = normalizeChoices

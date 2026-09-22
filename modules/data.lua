@@ -6,8 +6,8 @@ return function(ctx)
 
     data.STATIC_TEXT_IDS = {
         ["~ KRISTAL DEBUG ~"] = "debug_menu_title",
-        ["Welcome to [color:cyan]KRISTAL[color:reset]! This is the debug console."] = "console_welcome",
-        ["You can enter Lua here to be ran! Use [color:gray]clear()[color:reset] to clear the console."] = "console_lua_hint",
+        ["Welcome to KRISTAL! This is the debug console."] = "console_welcome",
+        ["You can enter Lua here to be ran! Use help() to open the help menu."] = "console_lua_hint",
         ["Engine Options"] = "debug_engine_options",
         ["Show FPS"] = "debug_show_fps",
         ["Toggle the FPS display."] = "debug_toggle_fps_display",
@@ -20,6 +20,11 @@ return function(ctx)
         ["Show performance in the console."] = "debug_show_performance",
         ["Force GC"] = "debug_force_gc",
         ["Force a garbage collection."] = "debug_force_gc_description",
+        ["Kill Party"] = "debug_kill_party",
+        ["Applies fatal damage to all party members."] = "debug_kill_party_description",
+        ["Logger Popups"] = "debug_logger_popups",
+        ["Whether or not the logger's pop-ups are only warnings or not. (All)"] = "debug_logger_popups_description_all",
+        ["Whether or not the logger's pop-ups are only warnings or not. (Warnings Only)"] = "debug_logger_popups_description_warnings",
         ["Force Crash"] = "debug_force_crash",
         ["Force a crash."] = "debug_force_crash_description",
         ["Back"] = "debug_back",
@@ -272,7 +277,7 @@ return function(ctx)
         },
         {
             index = 2,
-            plain = "You can enter Lua here to be ran! Use clear() to clear the console.",
+            plain = "You can enter Lua here to be ran! Use help() to open the help menu.",
             id = "console_lua_hint",
         },
     }
