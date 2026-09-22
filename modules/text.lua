@@ -725,11 +725,7 @@ return function(ctx)
     end
 
     local function parseConsoleHistoryLines(console, text)
-        local history = console.history
-        console.history = {}
-        console:push(text)
-        local parsed = console.history
-        console.history = history
+        local _, parsed = console:getWrappedLines(text, SCREEN_WIDTH - 16)
         return parsed
     end
 
