@@ -71,6 +71,7 @@ return function(ctx)
     local hookRegistryItemCreation = hooks.hookRegistryItemCreation
     local hookFrameworkLocalization = hooks.hookFrameworkLocalization
     local resolveDisplayText = hooks.resolveDisplayText
+    local localizeConsoleSegments = text.localizeConsoleSegments
     local resolveGonerChoice = hooks.resolveGonerChoice
     local resolveGonerChoices = hooks.resolveGonerChoices
     local resolveTextList = hooks.resolveTextList
@@ -79,6 +80,17 @@ return function(ctx)
     local resolveShopItemOptions = hooks.resolveShopItemOptions
     local resolveFileNamerOptions = hooks.resolveFileNamerOptions
     local resolveListMenuValues = hooks.resolveListMenuValues
+
+    -- Libraries announce themselves through the engine's "System" logger, which
+    -- is the only path that yields the "[System] [INFO] " prefix. The line is
+    -- pushed before this library's console hooks exist, so it stays English
+    -- until refreshConsoleStartupHistory() re-runs localizeConsoleSegments()
+    -- over the console history (see modules/text.lua).
+    local function announceEnabled()
+        if Logging and Logging.info then
+            Logging.info("Enabled library " .. kristalI18n.info.id .. ".")
+        end
+    end
 
     -- Expose the CJK module to the optional hook scripts (the dark config
     -- menu bakes label spacing at setText time and needs the same settings).
@@ -169,6 +181,8 @@ return function(ctx)
         hookDebugSystemLocalization()
         hookRegistryItemCreation()
         hookFrameworkLocalization()
+
+        announceEnabled()
     end
 
     function kristalI18n:onKeyPressed(key, is_repeat)
@@ -862,12 +876,15 @@ return function(ctx)
         end
 
         if Console then
-            HookSystem.hook(Console, "print", function(orig, self, value, x, y)
+            HookSystem.hook(Console, "print", function(orig, self, value, x, y, align, alpha)
                 if Game.lang ~= "zh_hans" then
-                    return orig(self, value, x, y)
+                    return orig(self, value, x, y, align, alpha)
                 end
                 if value == nil then
                     return
+                end
+                if align ~= nil or alpha ~= nil then
+                    return orig(self, value, x, y, align, alpha)
                 end
 
                 local x_offset = 0
@@ -889,7 +906,17 @@ return function(ctx)
             end)
 
             HookSystem.hook(Console, "push", function(orig, self, str)
-                return orig(self, resolveDisplayText(str))
+                -- Logger lines arrive as segment arrays (ConsoleOutputListener);
+                -- only plain strings need translating / markup conversion.
+                if type(str) ~= "string" then
+                    return orig(self, localizeConsoleSegments and localizeConsoleSegments(str) or str)
+                end
+
+                local localized = resolveDisplayText(str)
+                if text.consoleMarkupToSegments then
+                    localized = text.consoleMarkupToSegments(localized)
+                end
+                return orig(self, localized)
             end)
             refreshConsoleStartupHistory()
         end

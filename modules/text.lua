@@ -668,6 +668,132 @@ return function(ctx)
         end
     end
 
+    -- The console no longer parses [color:name] markup: Console:push now takes
+    -- an array of strings and color tables. Translations stay readable markup,
+    -- so convert them to the new segment format on the way in.
+    -- Resolved at call time: this module is also loaded by the standalone
+    -- luajit tests, where the engine's COLORS global does not exist.
+    local function consoleMarkupColor(name)
+        if name == "cyan" then
+            return { 0.5, 1, 1, 1 }
+        end
+
+        local colors = rawget(_G, "COLORS")
+        if colors and name ~= "reset" and colors[name] then
+            return colors[name]
+        end
+
+        return colors and colors.white or { 1, 1, 1, 1 }
+    end
+
+    local function consoleMarkupToSegments(text)
+        if type(text) ~= "string" or not text:find("[color:", 1, true) then
+            return text
+        end
+
+        local segments, pos = {}, 1
+        while true do
+            local start, stop, name = text:find("%[color:([%w_]+)%]", pos)
+            if not start then
+                break
+            end
+            if start > pos then
+                table.insert(segments, text:sub(pos, start - 1))
+            end
+            table.insert(segments, consoleMarkupColor(name))
+            pos = stop + 1
+        end
+        if pos <= #text then
+            table.insert(segments, text:sub(pos))
+        end
+
+        return segments
+    end
+
+    -- Every replacement below collapses a line into { first color, text }, which
+    -- recolors the whole line. A message that should keep the Logger's own
+    -- prefix colors ("[System]" cyan, "[INFO]" green) needs the segments instead:
+    -- keep the ones covering the first `offset` characters of the plain text and
+    -- append `tail` (a segment array) after them.
+    local function replaceConsoleTail(value, offset, tail)
+        local out, consumed = {}, 0
+        for _, part in ipairs(value) do
+            if consumed >= offset then
+                break
+            end
+
+            if type(part) == "table" then
+                out[#out + 1] = part
+            else
+                local text = tostring(part)
+                local room = offset - consumed
+                out[#out + 1] = text:sub(1, room)
+                consumed = consumed + math.min(#text, room)
+            end
+        end
+
+        for _, part in ipairs(tail) do
+            out[#out + 1] = part
+        end
+        return out
+    end
+
+    local function localizeConsoleSegments(value)
+        if type(value) ~= "table" then
+            return value
+        end
+
+        local plain = {}
+        for _, part in ipairs(value) do
+            if type(part) == "string" then
+                plain[#plain + 1] = part
+            end
+        end
+        plain = table.concat(plain)
+
+        local localized
+        local project = plain:match("^%[[^%]]+%] %[%u+%] Loaded (.+)!$")
+        if project then
+            localized = Game:loc("console_logger_loaded_project", { name = project })
+        end
+
+        local version = plain:match("^%[System%] %[%u+%] Kristal v(.+)$")
+        if not localized and version then
+            localized = Game:loc("console_logger_kristal_version", { version = version })
+        elseif not localized then
+            local id, path = plain:match("^%[System%] %[%u+%] Loading save file (%d+) from path (.+)$")
+            if id then
+                localized = Game:loc("console_logger_loading_save", { id = id, path = path })
+            elseif plain:match("^%[System%] %[%u+%] Save file %d+ does not exist, starting new game%.$") then
+                local save_id = plain:match("^%[System%] %[%u+%] Save file (%d+)")
+                localized = Game:loc("console_logger_missing_save", { id = save_id })
+            end
+        end
+
+        if not localized then
+            -- Libraries announce themselves at init(), before this library's
+            -- console hooks exist; the English source below is the contract they
+            -- all emit (see modules/lifecycle.lua). Unlike the lines above, this
+            -- one keeps the "[System] [INFO] " prefix the Logger already colored
+            -- and only swaps the message after it, so the library name stays the
+            -- single highlighted part of the line.
+            local prefix, library = plain:match("^(%[System%] %[%u+%] )Enabled library (.+)%.$")
+            if prefix then
+                local tail = consoleMarkupToSegments(Game:loc("console_logger_library_enabled", { name = library }))
+                if type(tail) ~= "table" then
+                    tail = { tail }
+                end
+                return replaceConsoleTail(value, #prefix, tail)
+            end
+        end
+
+        if not localized then
+            return value
+        end
+
+        return { value[1], localized }
+    end
+
     local function getConsoleHistoryPlainText(line)
         if type(line) ~= "table" then
             return tostring(line or "")
@@ -683,11 +809,7 @@ return function(ctx)
     end
 
     local function parseConsoleHistoryLines(console, text)
-        local history = console.history
-        console.history = {}
-        console:push(text)
-        local parsed = console.history
-        console.history = history
+        local _, parsed = console:getWrappedLines(text, SCREEN_WIDTH - 16)
         return parsed
     end
 
@@ -708,9 +830,13 @@ return function(ctx)
 
         for _, message in ipairs(CONSOLE_STARTUP_MESSAGES) do
             if console.history[message.index] then
-                local parsed = parseConsoleHistoryLines(console, Game:loc(message.id))
+                local parsed = parseConsoleHistoryLines(console, consoleMarkupToSegments(Game:loc(message.id)))
                 console.history[message.index] = parsed[1] or { "" }
             end
+        end
+
+        for index, line in ipairs(console.history) do
+            console.history[index] = localizeConsoleSegments(line)
         end
 
         console.__langlib_zh_startup_localized = true
@@ -1312,6 +1438,8 @@ return function(ctx)
     M.localizeDynamicStaticTextValue = localizeDynamicStaticTextValue
     M.localizeTextValue = localizeTextValue
     M.resolveTextInput = resolveTextInput
+    M.consoleMarkupToSegments = consoleMarkupToSegments
+    M.localizeConsoleSegments = localizeConsoleSegments
     M.mergeTextOptions = mergeTextOptions
     M.normalizeCutsceneTextArgs = normalizeCutsceneTextArgs
     M.normalizeChoices = normalizeChoices
