@@ -4,73 +4,72 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [0.6.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.3...v0.6.0) (2026-09-23)
+
 ### Features
 
-* **i18n:** expose stable item localization-key lookup for content libraries, including `use_name` aliases
+- **i18n:** expose stable item localization-key lookup for content libraries, including `use_name` aliases
+- translate segmented console output and library enable messages
+
+### Bug Fixes
+
+- adapt console localization to the segmented push API and preserve localized startup history
 
 ## [0.5.3](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.2...v0.5.3) (2026-08-24)
 
-
 ### chore
 
-* force release 0.5.3 ([057498d](https://github.com/Bli-AIk/kristal-i18n/commit/057498db1436750239f3f7090ab76109d1ed848d))
+- force release 0.5.3 ([057498d](https://github.com/Bli-AIk/kristal-i18n/commit/057498db1436750239f3f7090ab76109d1ed848d))
 
 ## [0.5.2](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.1...v0.5.2) (2026-08-19)
 
-
 ### Bug Fixes
 
-* **i18n:** rebuild debug system menus on language switch ([e18e217](https://github.com/Bli-AIk/kristal-i18n/commit/e18e2170f4cd4f1dc1e9c4b79f0a78f74add7ca0))
+- **i18n:** rebuild debug system menus on language switch ([e18e217](https://github.com/Bli-AIk/kristal-i18n/commit/e18e2170f4cd4f1dc1e9c4b79f0a78f74add7ca0))
 
 ## [0.5.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.0...v0.5.1) (2026-08-19)
 
-
 ### Bug Fixes
 
-* **i18n:** translate F6 battle overlay invincibility hint ([9a39f44](https://github.com/Bli-AIk/kristal-i18n/commit/9a39f440a4d61bae26fe6d1b099c266199b246d3))
+- **i18n:** translate F6 battle overlay invincibility hint ([9a39f44](https://github.com/Bli-AIk/kristal-i18n/commit/9a39f440a4d61bae26fe6d1b099c266199b246d3))
 
 ## [0.5.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.4.1...v0.5.0) (2026-08-18)
 
-
 ### Features
 
-* **i18n:** name-language font handling ([1dfa963](https://github.com/Bli-AIk/kristal-i18n/commit/1dfa96341a8cc5c8ae9619cd43579f995186f8d2))
-* **i18n:** support Kristal 0.11.0-dev ([efc19a2](https://github.com/Bli-AIk/kristal-i18n/commit/efc19a28a0ee724dc80d36558d0a2c224264accf))
-* support Kristal 0.11.0-dev ([e8152c2](https://github.com/Bli-AIk/kristal-i18n/commit/e8152c2c73357b8d84ec9f4df74f54a971a11666))
-
+- **i18n:** name-language font handling ([1dfa963](https://github.com/Bli-AIk/kristal-i18n/commit/1dfa96341a8cc5c8ae9619cd43579f995186f8d2))
+- **i18n:** support Kristal 0.11.0-dev ([efc19a2](https://github.com/Bli-AIk/kristal-i18n/commit/efc19a28a0ee724dc80d36558d0a2c224264accf))
+- support Kristal 0.11.0-dev ([e8152c2](https://github.com/Bli-AIk/kristal-i18n/commit/e8152c2c73357b8d84ec9f4df74f54a971a11666))
 
 ### Bug Fixes
 
-* **cjk:** halve CJK spacing in dark config menu ([1a61685](https://github.com/Bli-AIk/kristal-i18n/commit/1a6168505944464099afae3eb0c15c3588f555aa))
-* **cjk:** halve CJK spacing in dark power and equip menus ([53dbf8b](https://github.com/Bli-AIk/kristal-i18n/commit/53dbf8ba44a66b782b7cac411c3cff649dbcca9c))
-* **i18n:** align language settings menu ([c6e58cf](https://github.com/Bli-AIk/kristal-i18n/commit/c6e58cfc6ca1680ad4d4422da90d86ded6636bbc))
-* **i18n:** balance language settings layout ([a79c5ac](https://github.com/Bli-AIk/kristal-i18n/commit/a79c5ac4605360d57b10537b607f8e43a0730c68))
-* **i18n:** localize healing and dog power stats ([d5669ee](https://github.com/Bli-AIk/kristal-i18n/commit/d5669eeb4ed65df4bdeb249b9bbd61ea35b7c9a2))
-* **i18n:** restore asterisk on healing stat ([7a1d372](https://github.com/Bli-AIk/kristal-i18n/commit/7a1d372e33bae995467e95b8a18c4eaa27d5e7c9))
-* **i18n:** shorten character names label ([2d245b1](https://github.com/Bli-AIk/kristal-i18n/commit/2d245b145825525750fb840d52e1d590b7359546))
-* **i18n:** translate debug invincibility options ([d0607fc](https://github.com/Bli-AIk/kristal-i18n/commit/d0607fceadcdca419d789e2e2373bee1fdbf4112))
+- **cjk:** halve CJK spacing in dark config menu ([1a61685](https://github.com/Bli-AIk/kristal-i18n/commit/1a6168505944464099afae3eb0c15c3588f555aa))
+- **cjk:** halve CJK spacing in dark power and equip menus ([53dbf8b](https://github.com/Bli-AIk/kristal-i18n/commit/53dbf8ba44a66b782b7cac411c3cff649dbcca9c))
+- **i18n:** align language settings menu ([c6e58cf](https://github.com/Bli-AIk/kristal-i18n/commit/c6e58cfc6ca1680ad4d4422da90d86ded6636bbc))
+- **i18n:** balance language settings layout ([a79c5ac](https://github.com/Bli-AIk/kristal-i18n/commit/a79c5ac4605360d57b10537b607f8e43a0730c68))
+- **i18n:** localize healing and dog power stats ([d5669ee](https://github.com/Bli-AIk/kristal-i18n/commit/d5669eeb4ed65df4bdeb249b9bbd61ea35b7c9a2))
+- **i18n:** restore asterisk on healing stat ([7a1d372](https://github.com/Bli-AIk/kristal-i18n/commit/7a1d372e33bae995467e95b8a18c4eaa27d5e7c9))
+- **i18n:** shorten character names label ([2d245b1](https://github.com/Bli-AIk/kristal-i18n/commit/2d245b145825525750fb840d52e1d590b7359546))
+- **i18n:** translate debug invincibility options ([d0607fc](https://github.com/Bli-AIk/kristal-i18n/commit/d0607fceadcdca419d789e2e2373bee1fdbf4112))
 
 ## [0.4.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.4.0...v0.4.1) (2026-08-13)
 
-
 ### chore
 
-* force release 0.4.1 ([3d3dbe7](https://github.com/Bli-AIk/kristal-i18n/commit/3d3dbe7b5a5792503eb31f24b1bf777a15b47988))
-
+- force release 0.4.1 ([3d3dbe7](https://github.com/Bli-AIk/kristal-i18n/commit/3d3dbe7b5a5792503eb31f24b1bf777a15b47988))
 
 ### Features
 
-* apply startup language from launch args ([7acde54](https://github.com/Bli-AIk/kristal-i18n/commit/7acde54a99001bf61a1b5c0ed37f56bc180dff94))
-* apply startup name language from launch args ([cddb190](https://github.com/Bli-AIk/kristal-i18n/commit/cddb1908d82ee3e0fb8ec341dc02c91c17ae7966))
-* **cjk:** halve CJK spacing for party titles and descriptions ([c041f8b](https://github.com/Bli-AIk/kristal-i18n/commit/c041f8bba7bf4e9328e74e4a487d77af58d83c9e))
-* detect system language via SDL FFI ([e81a4a1](https://github.com/Bli-AIk/kristal-i18n/commit/e81a4a183fc0d2dcbcc47384d9e56863f0f4174e))
-* **i18n:** translate power menu joke stats ([5c699d5](https://github.com/Bli-AIk/kristal-i18n/commit/5c699d5b678c12fa1feb40bdd8d1da31031f6556))
-
+- apply startup language from launch args ([7acde54](https://github.com/Bli-AIk/kristal-i18n/commit/7acde54a99001bf61a1b5c0ed37f56bc180dff94))
+- apply startup name language from launch args ([cddb190](https://github.com/Bli-AIk/kristal-i18n/commit/cddb1908d82ee3e0fb8ec341dc02c91c17ae7966))
+- **cjk:** halve CJK spacing for party titles and descriptions ([c041f8b](https://github.com/Bli-AIk/kristal-i18n/commit/c041f8bba7bf4e9328e74e4a487d77af58d83c9e))
+- detect system language via SDL FFI ([e81a4a1](https://github.com/Bli-AIk/kristal-i18n/commit/e81a4a183fc0d2dcbcc47384d9e56863f0f4174e))
+- **i18n:** translate power menu joke stats ([5c699d5](https://github.com/Bli-AIk/kristal-i18n/commit/5c699d5b678c12fa1feb40bdd8d1da31031f6556))
 
 ### Bug Fixes
 
-* **i18n:** add per-chapter party titles and ACT description ([42c5ea7](https://github.com/Bli-AIk/kristal-i18n/commit/42c5ea76dcaf6d4c81b03d8696b1c82b6b67170f))
-* **save:** keep persisted room names ASCII-safe for the main menu ([c57dc31](https://github.com/Bli-AIk/kristal-i18n/commit/c57dc31c8bb13e64654acf22e2eaf5c8d2e25603))
+- **i18n:** add per-chapter party titles and ACT description ([42c5ea7](https://github.com/Bli-AIk/kristal-i18n/commit/42c5ea76dcaf6d4c81b03d8696b1c82b6b67170f))
+- **save:** keep persisted room names ASCII-safe for the main menu ([c57dc31](https://github.com/Bli-AIk/kristal-i18n/commit/c57dc31c8bb13e64654acf22e2eaf5c8d2e25603))
 
 ## [0.4.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.3.3...v0.4.0) (2026-08-11)
 
