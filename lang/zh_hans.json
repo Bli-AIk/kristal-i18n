@@ -53,6 +53,8 @@
  "gameover_ralsei_dont_give_up": "  请你[wait:5]，\n  不要放弃！",
  "act_check_useless_analysis": "没用的\n分析",
  "mod_config_check_act_description_description": "战斗中的“查看”行动是否显示“没用的分析”。",
+ "mod_config_party_stats": "队伍属性",
+ "mod_config_party_stats_description": "选择队伍成员的属性以哪一章为准。",
  "debug_menu_title": "~ KRISTAL 调试 ~",
  "console_welcome": "欢迎来到 [color:cyan]KRISTAL[color:reset]！这里是调试控制台。",
  "console_lua_hint": "在此输入 Lua 代码即可执行；输入 [color:ltgray]help()[color:reset] 打开帮助菜单。",
