@@ -27,3 +27,5 @@ jobs:
           PY
       - name: Test localized pacify
         run: luajit tests/pacify_tired.lua
+      - name: Test localized console line counter
+        run: luajit tests/console_line_counter.lua

@@ -288,6 +288,11 @@ return function(ctx)
     end
 
     localizeDebugPatternText = function(text)
+        local line, total = text:match("^Line (%d+) of (%d+)$")
+        if line and total then
+            return Game:loc("console_line_counter", { line = line, total = total })
+        end
+
         local state = text:match("^State: (.+)$")
         if state then
             return Game:loc("debug_battle_state", { state = state })

@@ -58,6 +58,7 @@
  "debug_menu_title": "~ KRISTAL 调试 ~",
  "console_welcome": "欢迎来到 [color:cyan]KRISTAL[color:reset]！这里是调试控制台。",
  "console_lua_hint": "在此输入 Lua 代码即可执行；输入 [color:ltgray]help()[color:reset] 打开帮助菜单。",
+ "console_line_counter": "第 [var:line] 行，共 [var:total] 行",
  "console_logger_loaded_project": "已加载 [var:name]！",
  "console_logger_kristal_version": "[System] [INFO] Kristal v[var:version]",
  "console_logger_loading_save": "[System] [INFO] 正在读取存档 [var:id]（路径：[var:path]）",
