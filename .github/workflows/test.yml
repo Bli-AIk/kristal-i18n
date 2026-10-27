@@ -1,0 +1,31 @@
+name: Test Library
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LuaJIT
+        run: sudo apt-get update && sudo apt-get install -y luajit
+      - name: Check Lua syntax
+        run: find . -path ./.git -prune -o -type f -name '*.lua' -exec luajit -b {} /dev/null \;
+      - name: Check language JSON
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('lang').glob('*.json'):
+              json.loads(path.read_text())
+          PY
+      - name: Test localized pacify
+        run: luajit tests/pacify_tired.lua
+      - name: Test localized console line counter
+        run: luajit tests/console_line_counter.lua

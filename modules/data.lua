@@ -260,6 +260,8 @@ return function(ctx)
         ["[noskip][speed:0.5][spacing:8][voice:none] THEN THE WORLD[wait:30] \n WAS COVERED[wait:30] \n IN DARKNESS."] = "gameover_darkness",
         ["Useless\nanalysis"] = "act_check_useless_analysis",
         ['Whether the "Check" act in battle says "Useless analysis" or not'] = "mod_config_check_act_description_description",
+        ["Party Stats"] = "mod_config_party_stats",
+        ["Which chapter to base party member's stats off of"] = "mod_config_party_stats_description",
     }
 
     data.GAMEOVER_PARTY_TEXT_IDS = {

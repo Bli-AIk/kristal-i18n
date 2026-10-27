@@ -982,7 +982,7 @@ return function(ctx)
                     userName = user.chara:getName(),
                     castName = self:getCastName()
                 })
-                if target.tired then
+                if target:isTired() then
                     return message
                 elseif target.mercy < 100 then
                     return message .. "\n[wait:0.25s]" .. Game:loc("spell_pacify_not_tired_enemy")

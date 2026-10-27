@@ -71,6 +71,7 @@ return function(ctx)
     local hookRegistryItemCreation = hooks.hookRegistryItemCreation
     local hookFrameworkLocalization = hooks.hookFrameworkLocalization
     local resolveDisplayText = hooks.resolveDisplayText
+    local resolveConsoleLines = hooks.resolveConsoleLines
     local localizeConsoleSegments = text.localizeConsoleSegments
     local resolveGonerChoice = hooks.resolveGonerChoice
     local resolveGonerChoices = hooks.resolveGonerChoices
@@ -883,24 +884,32 @@ return function(ctx)
                 if value == nil then
                     return
                 end
-                if align ~= nil or alpha ~= nil then
+                value = resolveConsoleLines(value)
+                if align ~= nil and align ~= "left" and align ~= "right" then
                     return orig(self, value, x, y, align, alpha)
+                end
+
+                -- The footer passes an explicit right alignment. Measure the
+                -- translated text, including CJK spacing, before positioning it.
+                if align == "right" then
+                    x = SCREEN_WIDTH - x
+                    for _, line in ipairs(value) do
+                        if type(line) ~= "table" or isTextDescriptor(line) then
+                            x = x - getPrintedTextWidth(self.font, line)
+                        end
+                    end
                 end
 
                 local x_offset = 0
 
                 for _, line in ipairs(value) do
-                    Draw.setColor(self.color)
                     if type(line) == "table" and not isTextDescriptor(line) then
                         self.color = line
                     else
-                        line = resolveDisplayText(line)
+                        local r, g, b, a = unpack(ColorUtils.ensureAlpha(self.color))
+                        Draw.setColor(r, g, b, a * (alpha or 1))
                         self:printOutlined(line, x + x_offset, y)
-                        if shouldPrintWithCjkSpacing(line) then
-                            x_offset = x_offset + getCjkPrintedTextWidth(self.font, line)
-                        else
-                            x_offset = x_offset + self.font:getWidth(line)
-                        end
+                        x_offset = x_offset + getPrintedTextWidth(self.font, line)
                     end
                 end
             end)
