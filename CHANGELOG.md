@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [0.6.1](https://github.com/Bli-AIk/kristal-i18n/compare/v0.6.0...v0.6.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* adapt localization to Kristal eaf9e0e ([#23](https://github.com/Bli-AIk/kristal-i18n/issues/23)) ([28a7cd7](https://github.com/Bli-AIk/kristal-i18n/commit/28a7cd7148b2e465caf30835b2dd455c367e58bd))
+
 ## [0.6.0](https://github.com/Bli-AIk/kristal-i18n/compare/v0.5.3...v0.6.0) (2026-09-23)
 
 ### Features
