@@ -197,7 +197,7 @@ return function(ctx)
             return
         end
 
-        local next_language = Game:getLanguage() == "zh_hans" and "en" or "zh_hans"
+        local next_language = TableUtils.pick(Game.langAvailable)
         if Game:setLanguage(next_language) then
             refreshMapName()
 
@@ -468,7 +468,7 @@ return function(ctx)
         end)
 
         HookSystem.hook(DialogueText, "updateTypewriter", function(orig, self)
-            if Game.lang ~= "zh_hans"
+            if Game.lang == "en"
                 or type(self.text) ~= "string"
                 or not hasCjkText(self.text)
                 or not self.state
@@ -654,7 +654,7 @@ return function(ctx)
             end)
 
             HookSystem.hook(ContextMenu, "getInnerWidth", function(orig, self)
-                if Game.lang ~= "zh_hans" then
+                if Game.lang == "en" then
                     return orig(self)
                 end
 
@@ -668,7 +668,7 @@ return function(ctx)
             end)
 
             HookSystem.hook(ContextMenu, "draw", function(orig, self)
-                if Game.lang ~= "zh_hans" then
+                if Game.lang == "en" then
                     return orig(self)
                 end
 
@@ -878,7 +878,7 @@ return function(ctx)
 
         if Console then
             HookSystem.hook(Console, "print", function(orig, self, value, x, y, align, alpha)
-                if Game.lang ~= "zh_hans" then
+                if Game.lang == "en" then
                     return orig(self, value, x, y, align, alpha)
                 end
                 if value == nil then

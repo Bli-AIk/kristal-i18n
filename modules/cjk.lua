@@ -62,7 +62,7 @@ return function(ctx)
             return text
         end
 
-        if Game.lang ~= "zh_hans" or not hasCjkText(text) or text:find("%[spacing:") then
+        if Game.lang == "en" or not hasCjkText(text) or text:find("%[spacing:") then
             return text
         end
 
@@ -140,7 +140,7 @@ return function(ctx)
     end
 
     local function wrapCjkText(text, limit)
-        if type(text) ~= "string" or Game.lang ~= "zh_hans" or not hasCjkText(text) then
+        if type(text) ~= "string" or Game.lang == "en" or not hasCjkText(text) then
             return text
         end
         limit = limit or 19
