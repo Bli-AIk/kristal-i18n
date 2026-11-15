@@ -102,7 +102,7 @@ return function(ctx)
     local function applyOriginalDebugTermReplacements(value)
         if type(value) ~= "string"
             or not Game
-            or Game.lang ~= "zh_hans"
+            or Game.lang == "en"
             or Game.langDebugTermsTranslated ~= false
         then
             return value

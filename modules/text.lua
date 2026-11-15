@@ -237,7 +237,7 @@ return function(ctx)
     end
 
     local function localizeStaticText(text)
-        if type(text) ~= "string" or not Game or Game.lang ~= "zh_hans" then
+        if type(text) ~= "string" or not Game or Game.lang == "en" then
             return text
         end
 
@@ -508,7 +508,7 @@ return function(ctx)
             text = resolveTextInput(text)
         end
 
-        if type(text) ~= "string" or Game.lang ~= "zh_hans" then
+        if type(text) ~= "string" or Game.lang == "en" then
             return text
         end
 
@@ -604,7 +604,7 @@ return function(ctx)
             text = resolveTextInput(text)
         end
 
-        if type(text) ~= "string" or Game.lang ~= "zh_hans" then
+        if type(text) ~= "string" or Game.lang == "en" then
             return text
         end
 

@@ -107,7 +107,7 @@ return function(ctx)
 
         party_member.__langlib_zh_power_stats_hooked = true
         HookSystem.hook(party_member, "drawPowerStat", function(orig, self, index, x, y, menu)
-            if Game:getLanguage() ~= "zh_hans" then
+            if Game:getLanguage() == "en" then
                 return orig(self, index, x, y, menu)
             end
 
@@ -133,7 +133,7 @@ return function(ctx)
     end
 
     localizeVictoryText = function(value)
-        if Game:getLanguage() ~= "zh_hans" or type(value) ~= "string" then
+        if Game:getLanguage() == "en" or type(value) ~= "string" then
             return value
         end
 
@@ -162,7 +162,7 @@ return function(ctx)
     end
 
     localizeBattleText = function(value)
-        if Game:getLanguage() ~= "zh_hans" or type(value) ~= "string" then
+        if Game:getLanguage() == "en" or type(value) ~= "string" then
             return value
         end
 
@@ -225,7 +225,7 @@ return function(ctx)
     end
 
     local function localizeDebugItemOption(name, description)
-        if not Game or Game.lang ~= "zh_hans" then
+        if not Game or Game.lang == "en" then
             return resolveDisplayText(name), localizeDynamicStaticTextValue(description)
         end
 
@@ -493,7 +493,7 @@ return function(ctx)
         end)
 
         HookSystem.hook(DebugSystem, "appendBool", function(orig, self, desc, bool)
-            if Game.lang == "zh_hans" then
+            if Game.lang ~= "en" then
                 return Game:loc("debug_bool_suffix", {
                     desc = resolveDisplayText(desc),
                     state = Game:loc(bool and "on" or "off")
@@ -526,7 +526,7 @@ return function(ctx)
 
         HookSystem.hook(Item, "getBonusName", function(orig, item, ...)
             local bonus_name = orig(item, ...)
-            if Game:getLanguage() ~= "zh_hans" then
+            if Game:getLanguage() == "en" then
                 return bonus_name
             end
 
@@ -536,7 +536,7 @@ return function(ctx)
 
         if LightEquipItem then
             HookSystem.hook(LightEquipItem, "showEquipText", function(orig, item, ...)
-                if Game:getLanguage() ~= "zh_hans" then
+                if Game:getLanguage() == "en" then
                     return orig(item, ...)
                 end
 
@@ -595,7 +595,7 @@ return function(ctx)
         local susie = Registry.getPartyMember("susie")
         if susie then
             HookSystem.hook(susie, "getReaction", function(orig, member, item, user)
-                if Game:getLanguage() == "zh_hans"
+                if Game:getLanguage() ~= "en"
                     and user and user.id == "susie"
                     and item
                     and not member:getFlag("can_wear_ribbons", false) then
@@ -612,7 +612,7 @@ return function(ctx)
         if noelle then
             HookSystem.hook(noelle, "getTitle", function(orig, self, ...)
                 local title = orig(self, ...)
-                if Game:getLanguage() ~= "zh_hans" or type(title) ~= "string" then
+                if Game:getLanguage() == "en" or type(title) ~= "string" then
                     return title
                 end
 
@@ -821,14 +821,14 @@ return function(ctx)
             local original_get_description = item.getDescription
 
             function item:getName()
-                if Game and Game.lang == "zh_hans" then
+                if Game and Game.lang ~= "en" then
                     return localizeItemField(self, "name")
                 end
                 return original_get_name(self)
             end
 
             function item:getDescription()
-                if Game and Game.lang == "zh_hans" then
+                if Game and Game.lang ~= "en" then
                     return localizeItemField(self, "description")
                 end
                 return original_get_description(self)
